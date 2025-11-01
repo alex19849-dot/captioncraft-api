@@ -13,9 +13,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'desc and tone required' });
     }
 
-    const prompt = `Write 5 ${tone} social media captions for: "${desc}".
-Keep each under 200 characters, include 2 to 4 relevant hashtags at the end. 
-No quotes around the captions. One caption per line.`;
+  const prompt = `Write EXACTLY 5 completely different ${tone} short social media captions for: "${desc}".
+Each caption must stand alone as a full post. Do NOT just list hashtags.
+Each caption MUST include 2 to 4 relevant hashtags at the end.
+Keep each caption under 200 characters.
+Return ONLY the captions, one per line, no numbering, no quotes.`;
 
     const r = await fetch(OPENAI_URL, {
       method: 'POST',
