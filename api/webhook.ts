@@ -11,7 +11,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 });
 
 const redis = new Redis(process.env.REDIS_URL as string, {
-  maxRetriesPerRequest: 1,
+  tls: {},
+  maxRetriesPerRequest: 20,
+  enableOfflineQueue: false,
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
