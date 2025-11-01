@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 Keep each under 200 characters and include relevant hashtags at the end.`;
 
   const completion = await client.chat.completions.create({
-    model: "gpt-5-mini",
+    model: "gpt-4o-mini",
     messages: [
       { role: "system", content: "You write extremely punchy social captions optimised for virality and short form attention rules." },
       { role: "user", content: prompt }
