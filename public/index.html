@@ -9,10 +9,18 @@
       --bg:#0f1115; --card:#171a21; --muted:#8b95a7; --line:#2f3852; --text:#e8ecf1; --accent:#6ee7ff;
     }
     *{box-sizing:border-box}
-    body{
-      margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:var(--bg); color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
-    }
+   body{
+  margin:0;
+  font-family:system-ui,sans-serif;
+  background:#0f1115;
+  color:#e8ecf1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  min-height:100vh;
+  padding-top:30px;
+}
     .card{
       width:100%; max-width:900px; background:var(--card); border:1px solid var(--line);
       border-radius:16px; padding:22px; box-shadow:0 10px 36px rgba(0,0,0,.45);
