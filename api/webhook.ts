@@ -39,45 +39,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     switch(event.type) {
 
-      case "checkout.session.completed": {
-        const session: any = event.data.object;
-        const email = session.customer_details?.email;
-        if (email) {
-          await redis.sadd("pro_users", email);
-          console.log("✅ ADDED PRO:", email);
-        }
-        break;
-      }
-
-      case "invoice.payment_succeeded": {
-        // renewals
-        const invoice: any = event.data.object;
-        const customer = await stripe.customers.retrieve(invoice.customer);
-        // @ts-ignore
-        const email = customer.email;
-        if (email) {
-          await redis.sadd("pro_users", email);
-          console.log("🔁 RENEW PRO:", email);
-        }
-        break;
-      }
-
-      case "customer.subscription.deleted": {
-        const sub: any = event.data.object;
-        const customer = await stripe.customers.retrieve(sub.customer);
-        // @ts-ignore
-        const email = customer.email;
-        if (email) {
-          await redis.srem("pro_users", email);
-          console.log("🧹 REMOVED PRO:", email);
-        }
-        break;
-      }
-
-      default:
-        console.log("Unhandled event type:", event.type);
+  case "checkout.session.completed": {
+    const session: any = event.data.object;
+    let email = session.customer_details?.email;
+    if (!email && session.customer) {
+      const customer = await stripe.customers.retrieve(session.customer);
+      // @ts-ignore
+      email = customer.email;
     }
+    if (email) await redis.sadd("pro_users", email);
+    console.log("✅ PRO: checkout", email);
+    break;
+  }
 
+  case "invoice.payment_succeeded": {
+    const invoice: any = event.data.object;
+    const customer = await stripe.customers.retrieve(invoice.customer);
+    // @ts-ignore
+    const email = customer.email;
+    if (email) await redis.sadd("pro_users", email);
+    console.log("🔁 PRO RENEW:", email);
+    break;
+  }
+
+  case "customer.subscription.deleted": {
+    const sub: any = event.data.object;
+    const customer = await stripe.customers.retrieve(sub.customer);
+    // @ts-ignore
+    const email = customer.email;
+    if (email) await redis.srem("pro_users", email);
+    console.log("🧹 PRO REMOVED:", email);
+    break;
+  }
+
+  case "customer.subscription.created": {
+    const sub: any = event.data.object;
+    const customer = await stripe.customers.retrieve(sub.customer);
+    // @ts-ignore
+    const email = customer.email;
+    if (email) await redis.sadd("pro_users", email);
+    console.log("✅ PRO SUB CREATED:", email);
+    break;
+  }
+
+  default:
+    console.log("Unhandled event type:", event.type);
+}
   } catch(err: any) {
     console.error("⚠️ Webhook internal error:", err);
     return res.status(500).send("Internal Error");
