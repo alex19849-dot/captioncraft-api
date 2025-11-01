@@ -3,20 +3,22 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Redis from "ioredis";
 
 export const config = {
-  api: {
-    bodyParser: false,
-  },
+  api: { bodyParser: false }
 };
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: "2024-10-28" });
-const redis = new Redis(process.env.REDIS_URL as string);
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
+  apiVersion: "2024-10-28"
+});
+
+const redis = new Redis(process.env.REDIS_URL as string, {
+  maxRetriesPerRequest: 1,
+});
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
 
   const sig = req.headers["stripe-signature"] as string;
 
-  // raw buffer for stripe verification
   const rawBody = await new Promise<Buffer>((resolve, reject) => {
     const chunks: Buffer[] = [];
     req.on("data", (chunk) => chunks.push(chunk));
@@ -25,6 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
 
   let event;
+
   try {
     event = stripe.webhooks.constructEvent(
       rawBody,
@@ -37,55 +40,64 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    switch(event.type) {
+    switch (event.type) {
 
-  case "checkout.session.completed": {
-    const session: any = event.data.object;
-    let email = session.customer_details?.email;
-    if (!email && session.customer) {
-      const customer = await stripe.customers.retrieve(session.customer);
-      // @ts-ignore
-      email = customer.email;
+      case "checkout.session.completed": {
+        const session: any = event.data.object;
+        let email = session.customer_details?.email;
+        if (!email && session.customer) {
+          const customer = await stripe.customers.retrieve(session.customer);
+          // @ts-ignore
+          email = customer.email;
+        }
+        if (email) {
+          await redis.sadd("pro_users", email);
+          console.log("✅ PRO: checkout", email);
+        }
+        break;
+      }
+
+      case "invoice.payment_succeeded": {
+        const invoice: any = event.data.object;
+        const customer = await stripe.customers.retrieve(invoice.customer);
+        // @ts-ignore
+        const email = customer.email;
+        if (email) {
+          await redis.sadd("pro_users", email);
+          console.log("🔁 PRO RENEW:", email);
+        }
+        break;
+      }
+
+      case "customer.subscription.deleted": {
+        const sub: any = event.data.object;
+        const customer = await stripe.customers.retrieve(sub.customer);
+        // @ts-ignore
+        const email = customer.email;
+        if (email) {
+          await redis.srem("pro_users", email);
+          console.log("🧹 PRO REMOVED:", email);
+        }
+        break;
+      }
+
+      case "customer.subscription.created": {
+        const sub: any = event.data.object;
+        const customer = await stripe.customers.retrieve(sub.customer);
+        // @ts-ignore
+        const email = customer.email;
+        if (email) {
+          await redis.sadd("pro_users", email);
+          console.log("✅ PRO SUB CREATED:", email);
+        }
+        break;
+      }
+
+      default:
+        console.log("Unhandled event type:", event.type);
     }
-    if (email) await redis.sadd("pro_users", email);
-    console.log("✅ PRO: checkout", email);
-    break;
-  }
 
-  case "invoice.payment_succeeded": {
-    const invoice: any = event.data.object;
-    const customer = await stripe.customers.retrieve(invoice.customer);
-    // @ts-ignore
-    const email = customer.email;
-    if (email) await redis.sadd("pro_users", email);
-    console.log("🔁 PRO RENEW:", email);
-    break;
-  }
-
-  case "customer.subscription.deleted": {
-    const sub: any = event.data.object;
-    const customer = await stripe.customers.retrieve(sub.customer);
-    // @ts-ignore
-    const email = customer.email;
-    if (email) await redis.srem("pro_users", email);
-    console.log("🧹 PRO REMOVED:", email);
-    break;
-  }
-
-  case "customer.subscription.created": {
-    const sub: any = event.data.object;
-    const customer = await stripe.customers.retrieve(sub.customer);
-    // @ts-ignore
-    const email = customer.email;
-    if (email) await redis.sadd("pro_users", email);
-    console.log("✅ PRO SUB CREATED:", email);
-    break;
-  }
-
-  default:
-    console.log("Unhandled event type:", event.type);
-}
-  } catch(err: any) {
+  } catch (err: any) {
     console.error("⚠️ Webhook internal error:", err);
     return res.status(500).send("Internal Error");
   }
