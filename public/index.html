@@ -1,1 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>CaptionCraft – AI Caption Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0f1115; --card:#171a21; --muted:#8b95a7; --line:#2f3852; --text:#e8ecf1; --accent:#6ee7ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg); color:var(--text); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    .card{
+      width:100%; max-width:900px; background:var(--card); border:1px solid var(--line);
+      border-radius:16px; padding:22px; box-shadow:0 10px 36px rgba(0,0,0,.45);
+    }
+    h1{margin:0 0 8px; text-align:center; color:var(--accent)}
+    .sub{margin:0 0 18px; text-align:center; color:var(--muted); font-size:14px}
+    label{display:block; margin:12px 0 6px; color:var(--muted); font-size:14px}
+    textarea,input,select,button{
+      width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:#0e121a; color:var(--text); font-size:14px;
+    }
+    select{cursor:pointer}
+    .row{display:grid; gap:12px}
+    @media(min-width:720px){ .row{grid-template-columns:2fr 1fr} }
+    button.primary{
+      margin-top:14px; font-weight:700; cursor:pointer;
+      background:linear-gradient(180deg,#1b2640,#121a2d);
+      box-shadow:0 4px 12px rgba(84,164,255,.18);
+    }
+    .meta{display:flex; gap:10px; align-items:center; margin-top:8px; font-size:13px; color:var(--muted)}
+    .badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 8px; border:1px solid var(--line); border-radius:999px; color:var(--muted)}
+    .pro{border-color:#3aa471; color:#87e4a5}
+    .danger{color:#ff6b6b}
+    #outputs{margin-top:20px; display:grid; gap:10px}
+    .out{background:#0f1420; border:1px solid #232838; border-radius:12px; padding:10px}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px}
+    .lock{opacity:.55; cursor:not-allowed}
+    .tooltip{font-size:12px; color:var(--muted)}
+
+    /* Modal */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.6);
+      display:none; align-items:center; justify-content:center; z-index:9999;
+    }
+    .modal{background:#121621; border:1px solid var(--line); border-radius:14px; width:min(520px,92%); padding:18px}
+    .modal h3{margin:6px 0 8px; color:var(--accent)}
+    .modal p{margin:0 0 12px; color:var(--muted)}
+    .modal .row{grid-template-columns:1fr auto}
+    .modal .btn{padding:10px 14px; border-radius:10px; border:1px solid var(--line); background:#182032; color:#fff; cursor:pointer; font-weight:700}
+    .modal .btn.secondary{background:#22283a}
+    .center{display:flex; justify-content:center}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>CaptionCraft</h1>
+    <p class="sub">Talk ideas out loud, get punchy captions back. Accessibility-first, creator-ready.</p>
+
+    <div class="row">
+      <div>
+        <label for="desc">Describe your image or post</label>
+        <textarea id="desc" rows="4" placeholder="Example: pint of lager on a sunny pub table in Preston"></textarea>
+      </div>
+      <div>
+        <label for="tone">Tone</label>
+        <select id="tone">
+          <!-- Your tones + 3 extra moods -->
+          <option>British witty</option>
+          <option>American bold</option>
+          <option>Australian laid-back</option>
+          <option>Sarcastic</option>
+          <option>Luxury</option>
+          <option>Motivational</option>
+          <option>Flirty</option>
+          <option>Dark humour</option>
+          <option>Empathetic supportive</option>
+          <option>Melancholic reflective</option>
+          <option>Savage roast</option>
+        </select>
+
+        <div class="actions">
+          <button id="micBtn" class="badge lock" aria-label="Hold to speak" title="Pro only">
+            🎤 Hold to speak <span class="badge pro">Pro</span>
+          </button>
+          <button id="generate" class="primary">Generate captions</button>
+        </div>
+        <div class="tooltip" id="proNote">Microphone is Pro only. Unlock for £4.99/mo.</div>
+
+        <div class="meta">
+          <span id="limitInfo"></span>
+          <span id="statusBadge" class="badge">Status: Checking…</span>
+        </div>
+
+        <button id="goPro"
+          style="margin-top:10px;background:#2b2f47;border:1px solid #555;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer">
+          Go Pro – Unlimited Captions £4.99/mo
+        </button>
+      </div>
+    </div>
+
+    <div id="outputs"></div>
+  </div>
+
+  <!-- Email modal -->
+  <div class="modal-backdrop" id="emailModal">
+    <div class="modal">
+      <h3>Quick thing, what’s your email?</h3>
+      <p>We’ll use this to check your Pro status. No spam, pinky promise.</p>
+      <div class="row">
+        <input id="emailInput" type="email" placeholder="you@example.com" />
+        <button id="saveEmail" class="btn">Save</button>
+      </div>
+      <div class="center" style="margin-top:8px;">
+        <button id="skipEmail" class="btn secondary">Skip for now</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- CONFIG ----------
+    const DAILY_LIMIT = 10; // free generations for non-Pro
+    const PRO_PRICE_TEXT = "£4.99/mo";
+    const CHECK_URL = "/api/check";            // backend lives in same project
+    const STRIPE_LINK = "https://buy.stripe.com/test_14AeVcapJdTd20Weos43S00"; // replace with live link later
+
+    // ---------- STATE ----------
+    let isPro = false;
+    let email = localStorage.getItem("cc_email") || "";
+
+    // ---------- ELEMENTS ----------
+    const limitInfo = document.getElementById("limitInfo");
+    const statusBadge = document.getElementById("statusBadge");
+    const outputs = document.getElementById("outputs");
+    const micBtn = document.getElementById("micBtn");
+    const goPro = document.getElementById("goPro");
+    const modal = document.getElementById("emailModal");
+    const emailInput = document.getElementById("emailInput");
+    const saveEmail = document.getElementById("saveEmail");
+    const skipEmail = document.getElementById("skipEmail");
+
+    // ---------- EMAIL MODAL ----------
+    function openModal(){ modal.style.display = "flex"; }
+    function closeModal(){ modal.style.display = "none"; }
+    function persistEmail(v){
+      email = v.trim();
+      if (email) localStorage.setItem("cc_email", email);
+    }
+
+    // Show modal if no email yet
+    if(!email){ openModal(); }
+
+    saveEmail.addEventListener("click", async ()=>{
+      const v = emailInput.value.trim();
+      if(!v || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){ alert("Pop a valid email in."); return; }
+      persistEmail(v);
+      closeModal();
+      await refreshProStatus();
+    });
+    skipEmail.addEventListener("click", ()=>{
+      // They can generate with limits but won't get Pro perks until email saved
+      closeModal();
+      updateLimitDisplay();
+      statusBadge.textContent = "Status: Guest (not Pro)";
+    });
+
+    // ---------- PRO CHECK ----------
+    async function refreshProStatus(){
+      if(!email){ isPro = false; updateUIForPro(); return; }
+      statusBadge.textContent = "Status: Checking…";
+      try{
+        const r = await fetch(`${CHECK_URL}?email=${encodeURIComponent(email)}`);
+        const j = await r.json();
+        isPro = !!j.pro;
+        updateUIForPro();
+      }catch(e){
+        console.error(e);
+        statusBadge.textContent = "Status: Error, defaulting to Free";
+        isPro = false; updateUIForPro();
+      }
+    }
+
+    function updateUIForPro(){
+      if(isPro){
+        statusBadge.textContent = "Status: Pro ✅";
+        limitInfo.textContent = "Unlimited generations";
+        micBtn.classList.remove("lock");
+        micBtn.title = "Hold to speak your idea, release to stop";
+        document.getElementById("proNote").style.display = "none";
+      }else{
+        statusBadge.textContent = "Status: Free";
+        updateLimitDisplay();
+        micBtn.classList.add("lock");
+        micBtn.title = "Pro only";
+        document.getElementById("proNote").style.display = "block";
+      }
+    }
+
+    // ---------- LIMITS ----------
+    function getUsage(){
+      const today = new Date().toISOString().slice(0,10);
+      const record = JSON.parse(localStorage.getItem("captionUsage") || "{}");
+      if(record.date !== today) return { date: today, used: 0 };
+      return record;
+    }
+    function saveUsage(data){ localStorage.setItem("captionUsage", JSON.stringify(data)); }
+    function canUse(){ return isPro ? true : getUsage().used < DAILY_LIMIT; }
+    function recordUse(){ if(!isPro){ const d = getUsage(); d.used += 1; saveUsage(d); updateLimitDisplay(); } }
+    function updateLimitDisplay(){
+      const d = getUsage();
+      limitInfo.textContent = `Free captions left today: ${Math.max(0, DAILY_LIMIT - d.used)} of ${DAILY_LIMIT}`;
+    }
+
+    // ---------- DEMO GENERATOR (safe, no API key) ----------
+    function demoGenerate(desc, tone){
+      // quick client-side templating to simulate output while we wire the backend generate later
+      const suffixes = [
+        "#OnBrand #CaptionCraft", "#ContentGameStrong", "#CreatorLife",
+        "#UKCreators", "#SmallBiz", "#ViralEnergy", "#Authentic"
+      ];
+      const ideas = [
+        `When ${desc.toLowerCase()} hits different.`,
+        `${desc} but make it main character.`,
+        `Just your daily dose of ${desc.toLowerCase()}.`,
+        `POV: ${desc.toLowerCase()} and vibes.`,
+        `${desc}. That’s the post.`,
+        `Tell me you love ${desc.toLowerCase()} without telling me.`
+      ];
+      const tag = suffixes[Math.floor(Math.random()*suffixes.length)];
+      // Return 5 lines
+      return ideas.slice(0,5).map((t,i)=> `${i+1}. ${t} ${tag}  (${tone})`);
+    }
+
+    // ---------- SPEECH TO TEXT (Pro only) ----------
+    let recognition = null;
+    if ("webkitSpeechRecognition" in window) {
+      recognition = new webkitSpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = "en-GB";
+      let buffer = "";
+
+      micBtn.addEventListener("mousedown", (e)=>{
+        if(!isPro){ return; }
+        buffer = "";
+        outputs.insertAdjacentHTML("afterbegin", `<div class="out" id="live">🎙️ Listening… speak your idea</div>`);
+        recognition.start();
+      });
+      micBtn.addEventListener("mouseup", (e)=>{
+        if(!isPro){ return; }
+        recognition.stop();
+        const live = document.getElementById("live");
+        if(live){ live.remove(); }
+        if(buffer.trim()){
+          const desc = document.getElementById("desc");
+          desc.value = (desc.value ? desc.value + " " : "") + buffer.trim();
+        }
+      });
+      recognition.onresult = (event)=>{
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const tr = event.results[i][0].transcript;
+          if (event.results[i].isFinal) { buffer += " " + tr; }
+          else { interim += tr; }
+        }
+        const live = document.getElementById("live");
+        if(live){ live.textContent = "🎙️ " + (buffer + " " + interim).trim(); }
+      };
+    } else {
+      micBtn.title = "Speech to text not supported in this browser";
+    }
+
+    // ---------- GENERATE CLICK ----------
+    document.getElementById("generate").addEventListener("click", async ()=>{
+      const desc = document.getElementById("desc").value.trim();
+      const tone = document.getElementById("tone").value;
+      if(!desc){ alert("Write a quick description first."); return; }
+
+      if(!isPro && !canUse()){
+        alert("You’ve used your free captions today. Go Pro for unlimited.");
+        return;
+      }
+
+      outputs.innerHTML = "<div class='out'>Thinking up captions…</div>";
+      recordUse();
+
+      // TEMP: demo generator so you can test today without exposing keys.
+      // Later: swap to a backend /api/generate endpoint.
+      const lines = demoGenerate(desc, tone);
+      outputs.innerHTML = "";
+      lines.forEach(line=>{
+        const el = document.createElement("div");
+        el.className="out";
+        el.textContent = line.replace(/^\d+[\).\s-]*/,"");
+        outputs.appendChild(el);
+      });
+    });
+
+    // ---------- Go Pro ----------
+    goPro.addEventListener("click", ()=> window.open(STRIPE_LINK, "_blank"));
+
+    // ---------- Boot ----------
+    (async function boot(){
+      if(email){ emailInput.value = email; }
+      updateLimitDisplay();
+      await refreshProStatus();
+    })();
+  </script>
+</body>
+</html>
 
