@@ -6,7 +6,7 @@
     "start": "vercel dev"
   },
   "dependencies": {
-    "stripe": "^14.0.0"
+    "stripe": "^14.0.0",
     "openai": "^4.47.3",
 "ioredis": "^5.3.2"
   },
