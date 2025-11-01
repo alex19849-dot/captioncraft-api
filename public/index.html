@@ -345,8 +345,13 @@ goProBtn.addEventListener("click", () => {
     console.error("boot error", e);
   }
 })();
+    // Re-check pro status when tab becomes active again (handles redirect back from Stripe)
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState==="visible"){
+    refreshProStatus();
+  }
+});
 </script>
-</footer>
 </body>
 </html>
 
