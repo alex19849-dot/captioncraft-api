@@ -274,40 +274,42 @@
     }
 
     // ---------- GENERATE CLICK ----------
-    document.getElementById("generate").addEventListener("click", async ()=>{
-      const desc = document.getElementById("desc").value.trim();
-      const tone = document.getElementById("tone").value;
-      if(!desc){ alert("Write a quick description first."); return; }
+   document.getElementById("generate").addEventListener("click", async ()=>{
+  const desc = document.getElementById("desc").value.trim();
+  const tone = document.getElementById("tone").value;
+  if(!desc){ alert("Write a quick description first."); return; }
 
-      if(!isPro && !canUse()){
-        alert("You’ve used your free captions today. Go Pro for unlimited.");
-        return;
-      }
+  if(!isPro && !canUse()){
+    alert("You’ve used your free captions today. Go Pro for unlimited.");
+    return;
+  }
 
-      outputs.innerHTML = "<div class='out'>Thinking up captions…</div>";
-      recordUse();
+  outputs.innerHTML = "<div class='out'>Thinking up captions…</div>";
+  recordUse();
 
-      // TEMP: demo generator so you can test today without exposing keys.
-      // Later: swap to a backend /api/generate endpoint.
-      const lines = demoGenerate(desc, tone);
-      outputs.innerHTML = "";
-      lines.forEach(line=>{
-        const el = document.createElement("div");
-        el.className="out";
-        el.textContent = line.replace(/^\d+[\).\s-]*/,"");
-        outputs.appendChild(el);
-      });
+  try{
+    const r = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ desc, tone })
     });
-
-    // ---------- Go Pro ----------
-    goPro.addEventListener("click", ()=> window.open(STRIPE_LINK, "_blank"));
-
-    // ---------- Boot ----------
-    (async function boot(){
-      if(email){ emailInput.value = email; }
-      updateLimitDisplay();
-      await refreshProStatus();
-    })();
+    if(!r.ok){
+      const t = await r.text();
+      throw new Error(`API ${r.status}: ${t}`);
+    }
+    const { captions } = await r.json();
+    outputs.innerHTML = "";
+    (captions || []).forEach(line=>{
+      const el = document.createElement("div");
+      el.className = "out";
+      el.textContent = line;
+      outputs.appendChild(el);
+    });
+  }catch(e){
+    outputs.innerHTML = `<div class="out" style="color:#ff6b6b">Error: ${e.message}</div>`;
+    console.error(e);
+  }
+});
   </script>
 </body>
 </html>
