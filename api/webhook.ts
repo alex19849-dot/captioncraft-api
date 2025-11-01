@@ -50,46 +50,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           // @ts-ignore
           email = customer.email;
         }
-        if (email) {
-          await redis.sadd("pro_users", email);
-          console.log("✅ PRO: checkout", email);
+
+        console.log("CHECKOUT EVENT EMAIL:", email);
+
+        try {
+          const ping = await redis.ping();
+          console.log("REDIS_PING:", ping);
+        } catch (err: any) {
+          console.error("REDIS CONNECTION ERROR:", err);
         }
+
+        if (email) {
+          try {
+            await redis.sadd("pro_users", email);
+            console.log("✅ STORED PRO USER:", email);
+          } catch (err: any) {
+            console.error("REDIS WRITE ERROR:", err);
+          }
+        }
+
         break;
       }
 
       case "invoice.payment_succeeded": {
-        const invoice: any = event.data.object;
-        const customer = await stripe.customers.retrieve(invoice.customer);
-        // @ts-ignore
-        const email = customer.email;
-        if (email) {
-          await redis.sadd("pro_users", email);
-          console.log("🔁 PRO RENEW:", email);
-        }
+        console.log("invoice.payment_succeeded hit");
         break;
       }
 
       case "customer.subscription.deleted": {
-        const sub: any = event.data.object;
-        const customer = await stripe.customers.retrieve(sub.customer);
-        // @ts-ignore
-        const email = customer.email;
-        if (email) {
-          await redis.srem("pro_users", email);
-          console.log("🧹 PRO REMOVED:", email);
-        }
+        console.log("customer.subscription.deleted hit");
         break;
       }
 
       case "customer.subscription.created": {
-        const sub: any = event.data.object;
-        const customer = await stripe.customers.retrieve(sub.customer);
-        // @ts-ignore
-        const email = customer.email;
-        if (email) {
-          await redis.sadd("pro_users", email);
-          console.log("✅ PRO SUB CREATED:", email);
-        }
+        console.log("customer.subscription.created hit");
         break;
       }
 
