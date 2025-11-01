@@ -21,10 +21,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     event = stripe.webhooks.constructEvent(
-      buf,
+      req.body as Buffer,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET as string
-    );
+      process.env.STRIPE_WEBHOOK_SECRET!
+);
   } catch (err: any) {
     console.error("Webhook signature failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
