@@ -1,0 +1,15 @@
+{
+  "name": "captioncraft-api",
+  "version": "1.0.0",
+  "main": "api/index.ts",
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "stripe": "^14.0.0"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.0.0",
+    "typescript": "^5.0.0"
+  }
+}
