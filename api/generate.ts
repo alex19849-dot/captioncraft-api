@@ -1,9 +1,14 @@
+import { Redis } from "@upstash/redis";
+
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import OpenAI from "openai";
-import Redis from "ioredis";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const redis = new Redis(process.env.REDIS_URL);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).send("POST only");
