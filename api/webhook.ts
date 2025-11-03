@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { Redis } from "@upstash/redis";
+import Redis from "ioredis";
 
 export const config = { api: { bodyParser: false } };
 
