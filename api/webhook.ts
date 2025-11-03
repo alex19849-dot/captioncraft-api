@@ -7,7 +7,7 @@ export const config = {
 };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: "2024-10-28"
+    apiVersion: "2023-10-16"
 });
 
 const redis = new Redis(process.env.REDIS_URL as string, {
@@ -22,7 +22,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const sig = req.headers["stripe-signature"] as string;
 
   const rawBody = await new Promise<Buffer>((resolve, reject) => {
-    const chunks: Buffer[] = [];
+   const chunks: Uint8Array[] = [];
     req.on("data", (chunk) => chunks.push(chunk));
     req.on("end", () => resolve(Buffer.concat(chunks)));
     req.on("error", reject);
