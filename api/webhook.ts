@@ -11,18 +11,20 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 
 // helper functions using REST redis
 async function addPro(email: string) {
-  return fetch(`${process.env.UPSTASH_REDIS_REST_URL}/sadd/pro_users/${encodeURIComponent(email)}`, {
+  await fetch(`${process.env.UPSTASH_REDIS_REST_URL}/set/pro_users:${encodeURIComponent(email)}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` },
+    body: JSON.stringify({ value: "1" })
+  });
+}
+
+async function removePro(email: string) {
+  await fetch(`${process.env.UPSTASH_REDIS_REST_URL}/del/pro_users:${encodeURIComponent(email)}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` }
   });
 }
 
-async function removePro(email: string) {
-  return fetch(`${process.env.UPSTASH_REDIS_REST_URL}/srem/pro_users/${encodeURIComponent(email)}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` }
-  });
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
