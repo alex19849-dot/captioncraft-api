@@ -1,7 +1,8 @@
 {
   "name": "captioncraft-api",
   "version": "1.0.0",
-  "main": "api/index.ts",
+  "private": true,
+  "type": "module",
   "scripts": {
     "start": "vercel dev"
   },
