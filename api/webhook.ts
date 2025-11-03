@@ -1,101 +1,62 @@
 import Stripe from "stripe";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import Redis from "ioredis";
+import { Redis } from "@upstash/redis";
 
-export const config = {
-  api: { bodyParser: false }
-};
+export const config = { api: { bodyParser: false } };
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-    apiVersion: "2023-10-16"
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: "2023-10-16" });
 
-const redis = new Redis(process.env.REDIS_URL as string, {
-  tls: {},
-  maxRetriesPerRequest: 20,
-  enableOfflineQueue: false,
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
-
   const sig = req.headers["stripe-signature"] as string;
 
   const rawBody = await new Promise<Buffer>((resolve, reject) => {
-   const chunks: Uint8Array[] = [];
+    const chunks: Uint8Array[] = [];
     req.on("data", (chunk) => chunks.push(chunk));
     req.on("end", () => resolve(Buffer.concat(chunks)));
     req.on("error", reject);
   });
 
   let event;
-
   try {
-    event = stripe.webhooks.constructEvent(
-      rawBody,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
+    event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET!);
   } catch (err: any) {
-    console.error("❌ Webhook signature failed:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  try {
-    switch (event.type) {
+  const storePro = async (email: string | null) => {
+    if (!email) return;
+    await redis.sadd("pro_users", email);
+    console.log("✅ PRO STORED:", email);
+  };
 
-      case "checkout.session.completed": {
-        const session: any = event.data.object;
-        let email = session.customer_details?.email;
-        if (!email && session.customer) {
-          const customer = await stripe.customers.retrieve(session.customer);
-          // @ts-ignore
-          email = customer.email;
-        }
-
-        console.log("CHECKOUT EVENT EMAIL:", email);
-
-        try {
-          const ping = await redis.ping();
-          console.log("REDIS_PING:", ping);
-        } catch (err: any) {
-          console.error("REDIS CONNECTION ERROR:", err);
-        }
-
-        if (email) {
-          try {
-            await redis.sadd("pro_users", email);
-            console.log("✅ STORED PRO USER:", email);
-          } catch (err: any) {
-            console.error("REDIS WRITE ERROR:", err);
-          }
-        }
-
-        break;
-      }
-
-      case "invoice.payment_succeeded": {
-        console.log("invoice.payment_succeeded hit");
-        break;
-      }
-
-      case "customer.subscription.deleted": {
-        console.log("customer.subscription.deleted hit");
-        break;
-      }
-
-      case "customer.subscription.created": {
-        console.log("customer.subscription.created hit");
-        break;
-      }
-
-      default:
-        console.log("Unhandled event type:", event.type);
+  switch (event.type) {
+    case "checkout.session.completed": {
+      const session: any = event.data.object;
+      const email = session.customer_details?.email;
+      await storePro(email);
+      break;
     }
 
-  } catch (err: any) {
-    console.error("⚠️ Webhook internal error:", err);
-    return res.status(500).send("Internal Error");
+    case "invoice.payment_succeeded": {
+      const invoice: any = event.data.object;
+      const customer: any = await stripe.customers.retrieve(invoice.customer);
+      await storePro(customer.email);
+      break;
+    }
+
+    case "customer.subscription.deleted": {
+      const sub: any = event.data.object;
+      const customer: any = await stripe.customers.retrieve(sub.customer);
+      await redis.srem("pro_users", customer.email);
+      console.log("🧹 PRO REMOVED:", customer.email);
+      break;
+    }
   }
 
   return res.json({ received: true });
