@@ -6,13 +6,10 @@
     "start": "vercel dev"
   },
   "dependencies": {
-    "stripe": "^14.0.0",
-    "openai": "^4.47.3",
-    "@upstash/redis": "^1.32.0",
-"_forceDeployTrigger": "1"
-
-
-  },
+  "stripe": "^14.0.0",
+  "openai": "^4.47.3",
+  "@upstash/redis": "^1.32.0"
+},
   "devDependencies": {
     "@vercel/node": "^3.0.0",
     "typescript": "^5.0.0"
