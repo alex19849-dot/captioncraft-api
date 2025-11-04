@@ -181,6 +181,7 @@ saveEmail.addEventListener("click", async () => {
   persistEmail(v);
   closeModal();
   await refreshProStatus();
+  updateUIForPro();
 });
 
 skipEmail.addEventListener("click", () => {
@@ -318,6 +319,7 @@ generateBtn.addEventListener("click", async () => {
     }
     const { captions } = await r.json();
     recordUse();
+    updateUIForPro();
     outputs.innerHTML = "";
     (captions || []).forEach(line => {
       const el = document.createElement("div");
