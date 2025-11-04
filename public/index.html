@@ -219,10 +219,17 @@ function updateUIForPro(){
   } else {
     statusBadge.textContent = "Status: Free";
     updateLimitDisplay();
-    micBtn.classList.add("lock");
-    micBtn.title = "Pro only";
-    const note = $("proNote"); if (note) note.style.display = "block";
-  }
+
+    // NEW LOGIC — free users get mic if under daily limit
+    if (canUse()) {
+      micBtn.classList.remove("lock");
+      micBtn.title = "Hold to speak your idea, release to stop (free preview)";
+      const note = $("proNote"); if (note) note.style.display = "none";
+    } else {
+      micBtn.classList.add("lock");
+      micBtn.title = "Pro only";
+      const note = $("proNote"); if (note) note.style.display = "block";
+    }
 }
 
 /* =========================
