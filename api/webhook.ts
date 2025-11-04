@@ -7,12 +7,12 @@ export const config = {
 };
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: "2023-10-16"
+  apiVersion: "2023-10-16",
 });
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -27,8 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     req.on("error", reject);
   });
 
-  let event;
-
+  let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(
       rawBody,
@@ -40,52 +39,66 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // helper store fn
-  const store = async (email: string | null) => {
-    if (!email) return;
-    email = email.toLowerCase().trim();
-    await redis.sadd("pro_users", email);
-    console.log("✅ STORED PRO USER:", email);
-  };
-
-  const pullEmail = async (stripeObj: any) => {
-    let email = stripeObj.customer_details?.email;
-    if (!email && stripeObj.customer) {
-      const customer: any = await stripe.customers.retrieve(stripeObj.customer);
-      email = customer.email;
-    }
-    return (email || null);
-  };
-
   try {
-    switch(event.type) {
+    switch (event.type) {
+
       case "checkout.session.completed": {
-        const email = await pullEmail(event.data.object);
-        await store(email);
+        console.log("### CHECKOUT SESSION EVENT RAW ###");
+        console.log(JSON.stringify(event.data.object, null, 2));
+
+        const session: any = event.data.object;
+
+        let email = session?.customer_details?.email || null;
+
+        if (!email && session.customer) {
+          const cust: any = await stripe.customers.retrieve(session.customer);
+          email = cust?.email || null;
+        }
+
+        console.log("CHECKOUT EVENT EMAIL:", email);
+
+        if (email) {
+          await redis.sadd("pro_users", email);
+          console.log("✅ PRO USER SAVED", email);
+        }
+
         break;
       }
 
       case "invoice.payment_succeeded": {
+        console.log("### invoice.payment_succeeded ###");
+
         const invoice: any = event.data.object;
-        const customer: any = await stripe.customers.retrieve(invoice.customer);
-        await store(customer.email);
+        const cust: any = await stripe.customers.retrieve(invoice.customer);
+        const email = cust?.email || null;
+
+        if (email) {
+          await redis.sadd("pro_users", email);
+          console.log("✅ PRO USER RENEWED", email);
+        }
         break;
       }
 
-      case "customer.subscription.deleted": {
+      case "customer.subscription.deleted":
+      {
+        console.log("### customer.subscription.deleted ###");
         const sub: any = event.data.object;
-        const customer: any = await stripe.customers.retrieve(sub.customer);
-        const email = customer.email?.toLowerCase().trim();
-        if (email) await redis.srem("pro_users", email);
-        console.log("🧹 PRO REMOVED:", email);
+        const cust: any = await stripe.customers.retrieve(sub.customer);
+        const email = cust?.email || null;
+
+        if (email) {
+          await redis.srem("pro_users", email);
+          console.log("🧹 PRO USER REMOVED", email);
+        }
         break;
       }
 
       default:
-        console.log("UNHANDLED:", event.type);
+        console.log("UNHANDLED EVENT:", event.type);
     }
-  } catch(e) {
-    console.error("🔥 INTERNAL WEBHOOK ERROR:", e);
+
+  } catch (err: any) {
+    console.error("🔥 INTERNAL WEBHOOK ERROR:", err);
     return res.status(500).send("Internal Error");
   }
 
