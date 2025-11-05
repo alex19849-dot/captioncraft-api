@@ -133,40 +133,35 @@
     </div>
   </div>
 
-  <script>
+ <script>
 "use strict";
 
-/* =========================
-   CONFIG
-========================= */
-const DAILY_LIMIT = 10; // free generations for non-Pro
-const CHECK_URL = "/api/check";
-const GENERATE_URL = "/api/generate";
-const STRIPE_LINK = "https://buy.stripe.com/test_14AeVcapJdTd20Weos43S00"; // replace with your live link later
+/* =============== CONFIG =============== */
+const DAILY_LIMIT = 10;                   // shared pool: mic + text together
+const CHECK_URL   = "/api/check";
+const GENERATE_URL= "/api/generate";
+const STRIPE_LINK = "https://buy.stripe.com/test_14AeVcapJdTd20Weos43S00"; // keep your link
 
-/* =========================
-   STATE + ELEMENT HELPERS
-========================= */
+/* =============== STATE + DOM =============== */
 let isPro = false;
 let email = localStorage.getItem("cc_email") || "";
 
-const $ = (id) => document.getElementById(id);
-const limitInfo   = $("limitInfo");
-const statusBadge = $("statusBadge");
-const outputs     = $("outputs");
-const micBtn      = $("micBtn");
-const goProBtn    = $("goPro");
-const modal       = $("emailModal");
-const emailInput  = $("emailInput");
-const saveEmail   = $("saveEmail");
-const skipEmail   = $("skipEmail");
-const descEl      = $("desc");
-const toneEl      = $("tone");
-const generateBtn = $("generate");
+const $          = (id) => document.getElementById(id);
+const limitInfo  = $("limitInfo");
+const statusBadge= $("statusBadge");
+const outputs    = $("outputs");
+const micBtn     = $("micBtn");
+const goProBtn   = $("goPro");
+const modal      = $("emailModal");
+const emailInput = $("emailInput");
+const saveEmail  = $("saveEmail");
+const skipEmail  = $("skipEmail");
+const descEl     = $("desc");
+const toneEl     = $("tone");
+const generateBtn= $("generate");
+const proNote    = $("proNote");
 
-/* =========================
-   EMAIL MODAL
-========================= */
+/* =============== EMAIL MODAL =============== */
 function openModal(){ modal.style.display = "flex"; }
 function closeModal(){ modal.style.display = "none"; }
 function persistEmail(v){
@@ -181,78 +176,74 @@ saveEmail.addEventListener("click", async () => {
   persistEmail(v);
   closeModal();
   await refreshProStatus();
-  updateUIForPro();
 });
-
 skipEmail.addEventListener("click", () => {
-  // They can still use free tier, just no Pro perks until email added
   closeModal();
   updateLimitDisplay();
   statusBadge.textContent = "Status: Guest (not Pro)";
 });
 
-/* =========================
-   PRO CHECK
-========================= */
+/* =============== PRO CHECK =============== */
 async function refreshProStatus(){
-  if (!email) { isPro = false; updateUIForPro(); return; }
+  if (!email) { isPro = false; applyUIForPro(); return; }
   statusBadge.textContent = "Status: Checking…";
   try {
     const r = await fetch(`${CHECK_URL}?email=${encodeURIComponent(email)}`, { cache: "no-store" });
     const j = await r.json();
     isPro = !!j.pro;
-    updateUIForPro();
+    applyUIForPro();
   } catch (e) {
     console.error("check error", e);
     statusBadge.textContent = "Status: Error, defaulting to Free";
     isPro = false;
-    updateUIForPro();
+    applyUIForPro();
   }
 }
 
-function updateUIForPro(){
+function applyUIForPro(){
+  // Mic is available on free until the limit is spent, so never hard-lock the button by class
+  micBtn.classList.remove("lock");
+  micBtn.title = isPro ? "Hold to speak your idea, release to stop"
+                       : "Hold to speak, counts toward your free daily limit";
+
+  if (proNote) {
+    proNote.textContent = isPro
+      ? "Pro active, unlimited mic and captions."
+      : "Mic and captions share 10 free uses per day. Pro unlocks unlimited.";
+  }
+
   if (isPro) {
     statusBadge.textContent = "Status: Pro ✅";
-    limitInfo.textContent = "Unlimited generations";
-    micBtn.classList.remove("lock");
-    micBtn.title = "Hold to speak your idea, release to stop";
-    const note = $("proNote"); if (note) note.style.display = "none";
+    limitInfo.textContent   = "Unlimited generations";
   } else {
     statusBadge.textContent = "Status: Free";
     updateLimitDisplay();
-
-    // NEW LOGIC — free users get mic if under daily limit
-    if (canUse()) {
-      micBtn.classList.remove("lock");
-      micBtn.title = "Hold to speak your idea, release to stop (free preview)";
-      const note = $("proNote"); if (note) note.style.display = "none";
-    } else {
-      micBtn.classList.add("lock");
-      micBtn.title = "Pro only";
-      const note = $("proNote"); if (note) note.style.display = "block";
-    }
+  }
 }
 
-/* =========================
-   FREE TIER LIMITS
-========================= */
+/* =============== SHARED DAILY LIMIT (mic + text) =============== */
 function getUsage(){
   const today = new Date().toISOString().slice(0,10);
-  const record = JSON.parse(localStorage.getItem("captionUsage") || "{}");
+  const record = JSON.parse(localStorage.getItem("captionUsageShared") || "{}");
   if (record.date !== today) return { date: today, used: 0 };
   return record;
 }
-function saveUsage(data){ localStorage.setItem("captionUsage", JSON.stringify(data)); }
+function saveUsage(data){ localStorage.setItem("captionUsageShared", JSON.stringify(data)); }
 function canUse(){ return isPro ? true : getUsage().used < DAILY_LIMIT; }
-function recordUse(){ if (!isPro) { const d = getUsage(); d.used += 1; saveUsage(d); updateLimitDisplay(); } }
+function recordUse(){
+  if (!isPro) {
+    const d = getUsage();
+    d.used += 1;
+    saveUsage(d);
+    updateLimitDisplay();
+  }
+}
 function updateLimitDisplay(){
   const d = getUsage();
-  limitInfo.textContent = `Free captions left today: ${Math.max(0, DAILY_LIMIT - d.used)} of ${DAILY_LIMIT}`;
+  limitInfo.textContent = `Free actions left today: ${Math.max(0, DAILY_LIMIT - d.used)} of ${DAILY_LIMIT}`;
 }
 
-/* =========================
-   SPEECH TO TEXT (Pro only)
-========================= */
+/* =============== SPEECH TO TEXT (free until pool spent) =============== */
 let recognition = null;
 if ("webkitSpeechRecognition" in window) {
   recognition = new webkitSpeechRecognition();
@@ -262,18 +253,19 @@ if ("webkitSpeechRecognition" in window) {
   let buffer = "";
 
   micBtn.addEventListener("mousedown", () => {
-    if (!isPro) return;
+    if (!isPro && !canUse()) { alert("You’ve used your free actions today. Go Pro for unlimited."); return; }
     buffer = "";
     outputs.insertAdjacentHTML("afterbegin", `<div class="out" id="live">🎙️ Listening… speak your idea</div>`);
     try { recognition.start(); } catch (_) {}
   });
 
   micBtn.addEventListener("mouseup", () => {
-    if (!isPro) return;
     try { recognition.stop(); } catch (_) {}
     const live = $("live");
     if (live) live.remove();
     if (buffer.trim()) {
+      // Mic counts as one action when you finish talking
+      recordUse();
       descEl.value = (descEl.value ? descEl.value + " " : "") + buffer.trim();
     }
   });
@@ -292,16 +284,14 @@ if ("webkitSpeechRecognition" in window) {
   micBtn.title = "Speech to text not supported in this browser";
 }
 
-/* =========================
-   GENERATE CAPTIONS (server)
-========================= */
+/* =============== GENERATE (server) =============== */
 generateBtn.addEventListener("click", async () => {
   const desc = (descEl.value || "").trim();
   const tone = toneEl.value;
   if (!desc) { alert("Write a quick description first."); return; }
 
   if (!isPro && !canUse()) {
-    alert("You’ve used your free captions today. Go Pro for unlimited.");
+    alert("You’ve used your free actions today. Go Pro for unlimited.");
     return;
   }
 
@@ -311,7 +301,7 @@ generateBtn.addEventListener("click", async () => {
     const r = await fetch(GENERATE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ desc, tone })
+      body: JSON.stringify({ desc, tone }) // email not required for generate
     });
     if (!r.ok) {
       const t = await r.text();
@@ -319,7 +309,6 @@ generateBtn.addEventListener("click", async () => {
     }
     const { captions } = await r.json();
     recordUse();
-    updateUIForPro();
     outputs.innerHTML = "";
     (captions || []).forEach(line => {
       const el = document.createElement("div");
@@ -333,34 +322,28 @@ generateBtn.addEventListener("click", async () => {
   }
 });
 
-/* =========================
-   GO PRO (same tab redirect)
-========================= */
+/* =============== GO PRO (same tab) =============== */
 goProBtn.addEventListener("click", () => {
-  // log to prove it fired
-  console.log("Go Pro clicked, redirecting...");
-  window.location.href = STRIPE_LINK; // same tab
+  window.location.href = STRIPE_LINK;
 });
 
-/* =========================
-   BOOT
-========================= */
+/* =============== BOOT =============== */
 (function boot(){
   try {
     if (email) emailInput.value = email;
+    // never keep mic visually locked, we gate by limit now
+    micBtn.classList.remove("lock");
     updateLimitDisplay();
     refreshProStatus();
   } catch (e) {
     console.error("boot error", e);
   }
 })();
-    // Re-check pro status when tab becomes active again (handles redirect back from Stripe)
+
+// Re-check Pro when user returns from Stripe tab
 document.addEventListener("visibilitychange", ()=>{
-  if(document.visibilityState==="visible"){
-    refreshProStatus();
-  }
+  if (document.visibilityState === "visible") refreshProStatus();
 });
-  window.addEventListener("focus", refreshProStatus);
 </script>
 </body>
 </html>
