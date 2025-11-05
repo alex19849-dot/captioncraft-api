@@ -247,8 +247,8 @@ function updateLimitDisplay(){
 let recognition = null;
 if ("webkitSpeechRecognition" in window) {
   recognition = new webkitSpeechRecognition();
-  recognition.continuous = true;
-  recognition.interimResults = true;
+ recognition.continuous = false;
+recognition.interimResults = false;
   recognition.lang = "en-GB";
   let buffer = "";
 
