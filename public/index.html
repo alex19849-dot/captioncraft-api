@@ -333,14 +333,16 @@ if ("webkitSpeechRecognition" in window) {
   micBtn.title = "Speech to text not supported in this browser";
 }
 
-/* =============== GENERATE (server) =============== */
+/* =========================
+   GENERATE CAPTIONS (server)
+========================= */
 generateBtn.addEventListener("click", async () => {
   const desc = (descEl.value || "").trim();
   const tone = toneEl.value;
   if (!desc) { alert("Write a quick description first."); return; }
 
   if (!isPro && !canUse()) {
-    alert("You’ve used your free actions today. Go Pro for unlimited.");
+    alert("You’ve used your free captions today. Go Pro for unlimited.");
     return;
   }
 
@@ -350,50 +352,45 @@ generateBtn.addEventListener("click", async () => {
     const r = await fetch(GENERATE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ desc, tone }) // email not required for generate
+      body: JSON.stringify({ desc, tone, email })
     });
+
     if (!r.ok) {
       const t = await r.text();
       throw new Error(`API ${r.status}: ${t}`);
     }
-       const { captions } = await r.json();
+
+    const { captions } = await r.json();
     recordUse();
     outputs.innerHTML = "";
-    
+
+    // build pill UI inside textarea box area
     captions.forEach(line => {
-      const pill = document.createElement("div");
-      pill.className = "out";
-      pill.style.display = "flex";
-      pill.style.justifyContent = "space-between";
-      pill.style.alignItems = "center";
-      pill.style.padding = "12px 14px";
-      pill.style.borderRadius = "999px";
-      pill.style.background = "#131720";
-      pill.style.border = "1px solid #2f3852";
-      pill.style.fontSize = "14px";
-      pill.style.cursor = "pointer";
+      const pill = document.createElement("button");
+      pill.textContent = line;
+      pill.className = "pillCopy";
+      pill.style.cssText = "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
 
-      const textSpan = document.createElement("span");
-      textSpan.textContent = line;
-
-      const copyBtn = document.createElement("span");
-      copyBtn.textContent = "📋";
-      copyBtn.style.cursor = "pointer";
-      copyBtn.style.paddingLeft = "10px";
-      copyBtn.title = "Copy caption";
-
-      copyBtn.addEventListener("click",(e)=>{
-        e.stopPropagation();
-        navigator.clipboard.writeText(line).then(()=>{
-          copyBtn.textContent = "✅";
-          setTimeout(()=> copyBtn.textContent = "📋", 900);
-        });
+      pill.addEventListener("click", () => {
+        navigator.clipboard.writeText(line);
+        pill.style.borderColor="#6ee7ff";
+        pill.style.background="#112030";
+        pill.textContent="Copied ✅";
+        setTimeout(()=>{
+          pill.textContent=line;
+          pill.style.borderColor="#2e364b";
+          pill.style.background="#181f2d";
+        },900);
       });
 
-      pill.appendChild(textSpan);
-      pill.appendChild(copyBtn);
       outputs.appendChild(pill);
     });
+
+  } catch (e) {
+    outputs.innerHTML = `<div class="out" style="color:#ff6b6b">Error: ${e.message}</div>`;
+    console.error(e);
+  }
+});
 
 
 /* =============== GO PRO (same tab) =============== */
