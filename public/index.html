@@ -248,48 +248,86 @@ let recognition = null;
 
 if ("webkitSpeechRecognition" in window) {
   recognition = new webkitSpeechRecognition();
-  recognition.continuous = false;
-  recognition.interimResults = false;
+  recognition.continuous = false;      // single utterance
+  recognition.interimResults = false;  // only finals
   recognition.lang = "en-GB";
-  let buffer = "";
 
-  function startMic() {
+  let buffer = "";
+  let listening = false;
+
+  function startMic(e) {
+    if (e) e.preventDefault();
     if (!isPro && !canUse()) {
       alert("You’ve used your free actions today. Go Pro for unlimited.");
       return;
     }
+    if (listening) return;
+
     buffer = "";
-    outputs.insertAdjacentHTML("afterbegin", `<div class="out" id="live">🎙️ Listening… speak your idea</div>`);
-    try { recognition.start(); } catch(_) {}
+    listening = true;
+
+    // visual
+    outputs.insertAdjacentHTML(
+      "afterbegin",
+      `<div class="out" id="live">🎙️ Listening… speak your idea</div>`
+    );
+
+    try { recognition.start(); } catch (_) {}
   }
 
-  function stopMic() {
-    try { recognition.stop(); } catch(_) {}
-    const live = document.getElementById("live");
-    if (live) live.remove();
-    if (buffer.trim()) {
-      recordUse();
-      descEl.value = (descEl.value ? descEl.value + " " : "") + buffer.trim();
-    }
+  function stopMic(e) {
+    if (e) e.preventDefault();
+    if (!listening) return;
+    try { recognition.stop(); } catch (_) {}
+    // DO NOT commit here. Wait for onend so the final result is delivered.
   }
 
-  // desktop mouse
-  micBtn.addEventListener("mousedown", startMic);
-  micBtn.addEventListener("mouseup", stopMic);
+  // Desktop mouse press/hold
+  micBtn.addEventListener("mousedown", startMic, { passive: false });
+  micBtn.addEventListener("mouseup", stopMic, { passive: false });
+  micBtn.addEventListener("mouseleave", stopMic, { passive: false });
 
-  // mobile pressure
-  micBtn.addEventListener("touchstart", startMic);
-  micBtn.addEventListener("touchend", stopMic);
+  // Mobile touch press/hold
+  micBtn.addEventListener("touchstart", startMic, { passive: false });
+  micBtn.addEventListener("touchend", stopMic, { passive: false });
+  micBtn.addEventListener("touchcancel", stopMic, { passive: false });
+
+  // Single-tap fallback (toggle)
+  micBtn.addEventListener("click", (e) => {
+    // if it was just a tap, toggle
+    if (!listening) startMic(e);
+    else stopMic(e);
+  });
 
   recognition.onresult = (event) => {
-    let interim = "";
+    // final results only, but guard anyway
     for (let i = event.resultIndex; i < event.results.length; i++) {
-      const tr = event.results[i][0].transcript;
-      if (event.results[i].isFinal) buffer += " " + tr;
-      else interim += tr;
+      if (event.results[i].isFinal) {
+        buffer += (buffer ? " " : "") + event.results[i][0].transcript;
+      }
     }
     const live = document.getElementById("live");
-    if (live) live.textContent = "🎙️ " + (buffer + " " + interim).trim();
+    if (live) live.textContent = "🎙️ " + (buffer || "Listening…");
+  };
+
+  recognition.onerror = () => {
+    listening = false;
+    const live = document.getElementById("live");
+    if (live) live.remove();
+  };
+
+  recognition.onend = () => {
+    // Final commit happens here, after last final result has been delivered
+    listening = false;
+    const live = document.getElementById("live");
+    if (live) live.remove();
+
+    const text = (buffer || "").trim();
+    if (text) {
+      // mic counts as one free action for non-Pro
+      recordUse();
+      descEl.value = (descEl.value ? descEl.value + " " : "") + text;
+    }
   };
 } else {
   micBtn.title = "Speech to text not supported in this browser";
