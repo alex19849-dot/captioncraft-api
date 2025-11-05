@@ -191,30 +191,14 @@ skipEmail.addEventListener("click", () => {
   statusBadge.textContent = "Status: Guest (not Pro)";
 });
 
-/* =============== PRO CHECK =============== */
-async function refreshProStatus(){
-  if (!email) { isPro = false; applyUIForPro(); return; }
-  statusBadge.textContent = "Status: Checking…";
-  try {
-    const r = await fetch(`${CHECK_URL}?email=${encodeURIComponent(email)}`, { cache: "no-store" });
-    const j = await r.json();
-    isPro = !!j.pro;
-    applyUIForPro();
-  } catch (e) {
-    console.error("check error", e);
-    statusBadge.textContent = "Status: Error, defaulting to Free";
-    isPro = false;
-    applyUIForPro();
-  }
-}
-
 function applyUIForPro(){
-  // Mic is available on free until the limit is spent, so never hard-lock the button by class
+  // Mic is available on free until limit is spent, so never hard lock button class
   micBtn.classList.remove("lock");
   micBtn.title = isPro ? "Hold to speak your idea, release to stop"
                        : "Hold to speak, counts toward your free daily limit";
 
   if (proNote) {
+    proNote.style.display = isPro ? "none" : "block";
     proNote.textContent = isPro
       ? "Pro active, unlimited mic and captions."
       : "Mic and captions share 10 free uses per day. Pro unlocks unlimited.";
@@ -223,9 +207,16 @@ function applyUIForPro(){
   if (isPro) {
     statusBadge.textContent = "Status: Pro ✅";
     limitInfo.textContent   = "Unlimited generations";
+
+    // HIDE Go Pro button when Pro user
+    goProBtn.style.display = "none";
+
   } else {
     statusBadge.textContent = "Status: Free";
     updateLimitDisplay();
+
+    // SHOW Go Pro button when free user
+    goProBtn.style.display = "block";
   }
 }
 
