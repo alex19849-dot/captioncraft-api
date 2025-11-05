@@ -245,30 +245,41 @@ function updateLimitDisplay(){
 
 /* =============== SPEECH TO TEXT (free until pool spent) =============== */
 let recognition = null;
+
 if ("webkitSpeechRecognition" in window) {
   recognition = new webkitSpeechRecognition();
- recognition.continuous = false;
-recognition.interimResults = false;
+  recognition.continuous = false;
+  recognition.interimResults = false;
   recognition.lang = "en-GB";
   let buffer = "";
 
-  micBtn.addEventListener("touchstart", () => {
-    if (!isPro && !canUse()) { alert("You’ve used your free actions today. Go Pro for unlimited."); return; }
+  function startMic() {
+    if (!isPro && !canUse()) {
+      alert("You’ve used your free actions today. Go Pro for unlimited.");
+      return;
+    }
     buffer = "";
     outputs.insertAdjacentHTML("afterbegin", `<div class="out" id="live">🎙️ Listening… speak your idea</div>`);
-    try { recognition.start(); } catch (_) {}
-  });
+    try { recognition.start(); } catch(_) {}
+  }
 
-  micBtn.addEventListener("touchend", () => {
-    try { recognition.stop(); } catch (_) {}
-    const live = $("live");
+  function stopMic() {
+    try { recognition.stop(); } catch(_) {}
+    const live = document.getElementById("live");
     if (live) live.remove();
     if (buffer.trim()) {
-      // Mic counts as one action when you finish talking
       recordUse();
       descEl.value = (descEl.value ? descEl.value + " " : "") + buffer.trim();
     }
-  });
+  }
+
+  // desktop mouse
+  micBtn.addEventListener("mousedown", startMic);
+  micBtn.addEventListener("mouseup", stopMic);
+
+  // mobile pressure
+  micBtn.addEventListener("touchstart", startMic);
+  micBtn.addEventListener("touchend", stopMic);
 
   recognition.onresult = (event) => {
     let interim = "";
@@ -277,7 +288,7 @@ recognition.interimResults = false;
       if (event.results[i].isFinal) buffer += " " + tr;
       else interim += tr;
     }
-    const live = $("live");
+    const live = document.getElementById("live");
     if (live) live.textContent = "🎙️ " + (buffer + " " + interim).trim();
   };
 } else {
