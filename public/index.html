@@ -252,14 +252,14 @@ recognition.interimResults = false;
   recognition.lang = "en-GB";
   let buffer = "";
 
-  micBtn.addEventListener("mousedown", () => {
+  micBtn.addEventListener("touchstart", () => {
     if (!isPro && !canUse()) { alert("You’ve used your free actions today. Go Pro for unlimited."); return; }
     buffer = "";
     outputs.insertAdjacentHTML("afterbegin", `<div class="out" id="live">🎙️ Listening… speak your idea</div>`);
     try { recognition.start(); } catch (_) {}
   });
 
-  micBtn.addEventListener("mouseup", () => {
+  micBtn.addEventListener("touchend", () => {
     try { recognition.stop(); } catch (_) {}
     const live = $("live");
     if (live) live.remove();
