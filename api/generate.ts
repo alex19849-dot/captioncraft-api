@@ -26,8 +26,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  const prompt = `Write 5 ${tone} social media captions for: "${desc}"
-Keep each under 200 characters and include relevant hashtags at the end.`;
+ const prompt = `Write 5 ${tone} social media captions for: ${desc}
+Rules:
+- DO NOT number the captions.
+- DO NOT use quotes at start or end.
+- Each caption must be standalone, clean, ready for copy/paste.
+- Keep each under 200 characters.
+- Include relevant hashtags at the end.`;
 
   const completion = await client.chat.completions.create({
     model: "gpt-4o-mini",
@@ -40,7 +45,11 @@ Keep each under 200 characters and include relevant hashtags at the end.`;
   });
 
   const text = completion.choices[0].message.content || "";
-  const lines = text.split(/\n+/).filter(Boolean).slice(0, 5);
+  const lines = text.split(/\n+/)
+  .map(l => l.replace(/^[0-9]+\.\s*/,"").replace(/^"|"$/g,"").trim())
+  .filter(Boolean)
+  .slice(0, 5);
+
 
   return res.json({ captions: lines, pro: isPro });
 }
