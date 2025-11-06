@@ -69,6 +69,7 @@
   <a href="/terms.html" style="color:#6ee7ff;text-decoration:none;">Terms & Conditions</a>
   <a href="/about.html" style="color:#6ee7ff;text-decoration:none;">About Us</a>
     <a href="#" id="logoutLink" style="color:#6ee7ff;text-decoration:none;">Logout</a>
+    <a href="#" id="manageBilling" style="color:#6ee7ff;text-decoration:none;display:none;">Manage Billing</a>
 </nav>
   <div style="margin-bottom:30px;font-size:13px;color:#8b95a7;text-align:center;">
   The Urban Creator, Made Better.
@@ -211,10 +212,12 @@ function applyUIForPro(){
     if (statusBadge) statusBadge.textContent = "Status: Pro ✅";
     if (limitInfo)  limitInfo.textContent    = "Unlimited generations";
     if (goProBtn)   goProBtn.style.display   = "none";
+    manageBilling.style.display = "inline";
   } else {
     if (statusBadge) statusBadge.textContent = "Status: Free";
     updateLimitDisplay();
     if (goProBtn)   goProBtn.style.display   = "block";
+    manageBilling.style.display = "none";
   }
 }
 
@@ -424,6 +427,12 @@ logoutLink.addEventListener("click", (e) => {
   localStorage.removeItem("lastKnownPro");
   localStorage.removeItem("captionUsageShared");
   window.location.reload();
+  const manageBilling = $("manageBilling");
+manageBilling.addEventListener("click", (e) => {
+  e.preventDefault();
+  window.location.href = "https://billing.stripe.com/p/login/5kQ4gyeFb5B4bZDb118Zq00";
+});
+
 });
 /* =============== BOOT =============== */
 (function boot(){
