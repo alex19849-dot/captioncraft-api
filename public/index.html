@@ -427,12 +427,11 @@ logoutLink.addEventListener("click", (e) => {
   localStorage.removeItem("lastKnownPro");
   localStorage.removeItem("captionUsageShared");
   window.location.reload();
-  const manageBilling = $("manageBilling");
+});
+ const manageBilling = $("manageBilling");
 manageBilling.addEventListener("click", (e) => {
   e.preventDefault();
   window.location.href = "https://billing.stripe.com/p/login/5kQ4gyeFb5B4bZDb118Zq00";
-});
-
 });
 /* =============== BOOT =============== */
 (function boot(){
