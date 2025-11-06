@@ -302,6 +302,83 @@ skipEmail.addEventListener("click", () => {
   updateLimitDisplay();
   statusBadge.textContent = "Status: Guest (not Pro)";
 });
+/* =============== APPLY UI FOR PRO =============== */
+function applyUIForPro(){
+  micBtn.classList.remove("lock");
+  micBtn.title = isPro ? "Hold to speak your idea, release to stop"
+                       : "Hold to speak, counts toward your free daily limit";
+
+  if (proNote) {
+    proNote.style.display = isPro ? "none" : "block";
+    proNote.textContent = isPro
+      ? "Pro active, unlimited mic and captions."
+      : "Mic and captions share 10 free uses per day. Pro unlocks unlimited.";
+  }
+
+  if (isPro) {
+    statusBadge.textContent = "Status: Pro ✅";
+    limitInfo.textContent   = "Unlimited generations";
+    goProBtn.style.display = "none";
+  } else {
+    statusBadge.textContent = "Status: Free";
+    updateLimitDisplay();
+    goProBtn.style.display = "block";
+  }
+}
+
+/* =============== PRO STATUS CHECK =============== */
+async function refreshProStatus(){
+  try {
+    if (statusBadge) statusBadge.textContent = "Status: Checking...";
+    if (!email) {
+      isPro = false;
+      applyUIForPro();
+      return;
+    }
+
+    const r = await fetch(CHECK_URL + "?email=" + encodeURIComponent(email), {
+      method: "GET",
+      headers: { "Accept":"application/json" }
+    });
+
+    if (!r.ok) {
+      isPro = false;
+      applyUIForPro();
+      console.warn("check failed", r.status);
+      return;
+    }
+
+    const data = await r.json();
+    isPro = !!(data && data.pro);
+    applyUIForPro();
+  } catch (err) {
+    console.error("refreshProStatus error", err);
+    isPro = false;
+    applyUIForPro();
+  }
+}
+
+/* =============== EMAIL MODAL =============== */
+function openModal(){ modal.style.display = "flex"; }
+function closeModal(){ modal.style.display = "none"; }
+function persistEmail(v){
+  email = (v || "").trim();
+  if (email) localStorage.setItem("cc_email", email);
+}
+if (!email) openModal();
+
+saveEmail.addEventListener("click", async () => {
+  const v = emailInput.value.trim();
+  if (!v || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { alert("Pop a valid email in."); return; }
+  persistEmail(v);
+  closeModal();
+  await refreshProStatus();
+});
+skipEmail.addEventListener("click", () => {
+  closeModal();
+  updateLimitDisplay();
+  statusBadge.textContent = "Status: Guest (not Pro)";
+});
 
 /* =========================
    GENERATE CAPTIONS (server)
