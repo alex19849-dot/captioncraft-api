@@ -343,6 +343,8 @@ async function refreshProStatus(){
 
     if (!r.ok) {
       isPro = false;
+      statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
+
       applyUIForPro();
       console.warn("check failed", r.status);
       return;
@@ -449,9 +451,9 @@ goProBtn.addEventListener("click", () => {
 (function boot(){
   try {
     if (email) emailInput.value = email;
-    // never keep mic visually locked, we gate by limit now
     micBtn.classList.remove("lock");
     updateLimitDisplay();
+    statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
     refreshProStatus();
   } catch (e) {
     console.error("boot error", e);
