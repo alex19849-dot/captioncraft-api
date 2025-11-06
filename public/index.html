@@ -141,38 +141,38 @@
     </div>
   </div>
 
- <script>
+<script>
 "use strict";
 
 /* =============== CONFIG =============== */
-const DAILY_LIMIT = 10;                   // shared pool: mic + text together
-const CHECK_URL   = "https://postpoet-api.vercel.app/api/check";
-const GENERATE_URL= "https://postpoet-api.vercel.app/api/generate";
-const STRIPE_LINK = "https://buy.stripe.com/test_14AeVcapJdTd20Weos43S00"; // keep your link
+const DAILY_LIMIT  = 10; // shared pool: mic + text
+const CHECK_URL    = "https://postpoet-api.vercel.app/api/check";
+const GENERATE_URL = "https://postpoet-api.vercel.app/api/generate";
+const STRIPE_LINK  = "https://buy.stripe.com/test_14AeVcapJdTd20Weos43S00";
 
 /* =============== STATE + DOM =============== */
 let isPro = false;
 let email = localStorage.getItem("cc_email") || "";
+let lastKnownPro = localStorage.getItem("lastKnownPro") === "true";
 
-const $          = (id) => document.getElementById(id);
-const limitInfo  = $("limitInfo");
-const statusBadge= $("statusBadge");
-const outputs    = $("outputs");
-const micBtn     = $("micBtn");
-const goProBtn   = $("goPro");
-const modal      = $("emailModal");
-const emailInput = $("emailInput");
-const saveEmail  = $("saveEmail");
-const skipEmail  = $("skipEmail");
-const descEl     = $("desc");
-const toneEl     = $("tone");
-const generateBtn= $("generate");
-const proNote    = $("proNote");
-
+const $           = (id) => document.getElementById(id);
+const limitInfo   = $("limitInfo");
+const statusBadge = $("statusBadge");
+const outputs     = $("outputs");
+const micBtn      = $("micBtn");
+const goProBtn    = $("goPro");
+const modal       = $("emailModal");
+const emailInput  = $("emailInput");
+const saveEmail   = $("saveEmail");
+const skipEmail   = $("skipEmail");
+const descEl      = $("desc");
+const toneEl      = $("tone");
+const generateBtn = $("generate");
+const proNote     = $("proNote");
 
 /* =============== SHARED DAILY LIMIT (mic + text) =============== */
 function getUsage(){
-  const today = new Date().toISOString().slice(0,10);
+  const today  = new Date().toISOString().slice(0,10);
   const record = JSON.parse(localStorage.getItem("captionUsageShared") || "{}");
   if (record.date !== today) return { date: today, used: 0 };
   return record;
@@ -189,17 +189,102 @@ function recordUse(){
 }
 function updateLimitDisplay(){
   const d = getUsage();
-  limitInfo.textContent = `Free actions left today: ${Math.max(0, DAILY_LIMIT - d.used)} of ${DAILY_LIMIT}`;
+  if (limitInfo) limitInfo.textContent = `Free actions left today: ${Math.max(0, DAILY_LIMIT - d.used)} of ${DAILY_LIMIT}`;
 }
+
+/* =============== APPLY UI FOR PRO =============== */
+function applyUIForPro(){
+  // Mic never visually locked, we gate by limit
+  micBtn.classList.remove("lock");
+  micBtn.title = isPro ? "Hold to speak your idea, release to stop"
+                       : "Hold to speak, counts toward your free daily limit";
+
+  if (proNote) {
+    proNote.style.display = isPro ? "none" : "block";
+    proNote.textContent = isPro
+      ? "Pro active, unlimited mic and captions."
+      : "Mic and captions share 10 free uses per day. Pro unlocks unlimited.";
+  }
+
+  if (isPro) {
+    if (statusBadge) statusBadge.textContent = "Status: Pro ✅";
+    if (limitInfo)  limitInfo.textContent    = "Unlimited generations";
+    if (goProBtn)   goProBtn.style.display   = "none";
+  } else {
+    if (statusBadge) statusBadge.textContent = "Status: Free";
+    updateLimitDisplay();
+    if (goProBtn)   goProBtn.style.display   = "block";
+  }
+}
+
+/* =============== PRO STATUS CHECK (optimistic, no flick) =============== */
+async function refreshProStatus(){
+  try {
+    if (!email) {
+      isPro = false;
+      localStorage.setItem("lastKnownPro", "false");
+      applyUIForPro();
+      return;
+    }
+
+    const r = await fetch(CHECK_URL + "?email=" + encodeURIComponent(email), {
+      method: "GET",
+      headers: { "Accept":"application/json" }
+    });
+
+    if (!r.ok) {
+      // stay on optimistic state, just ensure storage reflects false if needed
+      if (isPro === false) localStorage.setItem("lastKnownPro", "false");
+      applyUIForPro();
+      console.warn("pro check failed", r.status);
+      return;
+    }
+
+    const data = await r.json();
+    const newState = !!(data && data.pro);
+
+    // Only update UI if state changed, avoids late repaint lag
+    if (newState !== isPro) {
+      isPro = newState;
+      localStorage.setItem("lastKnownPro", String(isPro));
+      if (statusBadge) statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
+      applyUIForPro();
+    }
+  } catch (err) {
+    console.error("refreshProStatus error", err);
+    // keep optimistic UI, don’t jiggle the state
+  }
+}
+
+/* =============== EMAIL MODAL =============== */
+function openModal(){ modal.style.display = "flex"; }
+function closeModal(){ modal.style.display = "none"; }
+function persistEmail(v){
+  email = (v || "").trim();
+  if (email) localStorage.setItem("cc_email", email);
+}
+if (!email) openModal();
+
+saveEmail.addEventListener("click", async () => {
+  const v = emailInput.value.trim();
+  if (!v || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { alert("Pop a valid email in."); return; }
+  persistEmail(v);
+  closeModal();
+  await refreshProStatus();
+});
+skipEmail.addEventListener("click", () => {
+  closeModal();
+  updateLimitDisplay();
+  if (statusBadge) statusBadge.textContent = "Status: Guest (not Pro)";
+});
 
 /* =============== SPEECH TO TEXT (free until pool spent) =============== */
 let recognition = null;
-
 if ("webkitSpeechRecognition" in window) {
   recognition = new webkitSpeechRecognition();
-  recognition.continuous = false;      // single utterance
-  recognition.interimResults = false;  // only finals
-  recognition.lang = "en-GB";
+  recognition.continuous    = false;
+  recognition.interimResults= false;
+  recognition.lang          = "en-GB";
 
   let buffer = "";
   let listening = false;
@@ -215,12 +300,7 @@ if ("webkitSpeechRecognition" in window) {
     buffer = "";
     listening = true;
 
-    // visual
-    outputs.insertAdjacentHTML(
-      "afterbegin",
-      `<div class="out" id="live">🎙️ Listening… speak your idea</div>`
-    );
-
+    outputs.insertAdjacentHTML("afterbegin", `<div class="out" id="live">🎙️ Listening… speak your idea</div>`);
     try { recognition.start(); } catch (_) {}
   }
 
@@ -228,28 +308,22 @@ if ("webkitSpeechRecognition" in window) {
     if (e) e.preventDefault();
     if (!listening) return;
     try { recognition.stop(); } catch (_) {}
-    // DO NOT commit here. Wait for onend so the final result is delivered.
   }
 
   // Desktop mouse press/hold
   micBtn.addEventListener("mousedown", startMic, { passive: false });
-  micBtn.addEventListener("mouseup", stopMic, { passive: false });
-  micBtn.addEventListener("mouseleave", stopMic, { passive: false });
+  micBtn.addEventListener("mouseup",   stopMic,  { passive: false });
+  micBtn.addEventListener("mouseleave",stopMic,  { passive: false });
 
   // Mobile touch press/hold
   micBtn.addEventListener("touchstart", startMic, { passive: false });
-  micBtn.addEventListener("touchend", stopMic, { passive: false });
-  micBtn.addEventListener("touchcancel", stopMic, { passive: false });
+  micBtn.addEventListener("touchend",   stopMic,  { passive: false });
+  micBtn.addEventListener("touchcancel",stopMic,  { passive: false });
 
-  // Single-tap fallback (toggle)
-  micBtn.addEventListener("click", (e) => {
-    // if it was just a tap, toggle
-    if (!listening) startMic(e);
-    else stopMic(e);
-  });
+  // Single tap toggle
+  micBtn.addEventListener("click", (e) => { if (!listening) startMic(e); else stopMic(e); });
 
   recognition.onresult = (event) => {
-    // final results only, but guard anyway
     for (let i = event.resultIndex; i < event.results.length; i++) {
       if (event.results[i].isFinal) {
         buffer += (buffer ? " " : "") + event.results[i][0].transcript;
@@ -266,14 +340,12 @@ if ("webkitSpeechRecognition" in window) {
   };
 
   recognition.onend = () => {
-    // Final commit happens here, after last final result has been delivered
     listening = false;
     const live = document.getElementById("live");
     if (live) live.remove();
 
     const text = (buffer || "").trim();
     if (text) {
-      // mic counts as one free action for non-Pro
       recordUse();
       descEl.value = (descEl.value ? descEl.value + " " : "") + text;
     }
@@ -281,112 +353,6 @@ if ("webkitSpeechRecognition" in window) {
 } else {
   micBtn.title = "Speech to text not supported in this browser";
 }
-/* =============== EMAIL MODAL =============== */
-function openModal(){ modal.style.display = "flex"; }
-function closeModal(){ modal.style.display = "none"; }
-function persistEmail(v){
-  email = (v || "").trim();
-  if (email) localStorage.setItem("cc_email", email);
-}
-if (!email) openModal();
-
-saveEmail.addEventListener("click", async () => {
-  const v = emailInput.value.trim();
-  if (!v || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { alert("Pop a valid email in."); return; }
-  persistEmail(v);
-  closeModal();
-  await refreshProStatus();
-});
-skipEmail.addEventListener("click", () => {
-  closeModal();
-  updateLimitDisplay();
-  statusBadge.textContent = "Status: Guest (not Pro)";
-});
-/* =============== APPLY UI FOR PRO =============== */
-function applyUIForPro(){
-  micBtn.classList.remove("lock");
-  micBtn.title = isPro ? "Hold to speak your idea, release to stop"
-                       : "Hold to speak, counts toward your free daily limit";
-
-  if (proNote) {
-    proNote.style.display = isPro ? "none" : "block";
-    proNote.textContent = isPro
-      ? "Pro active, unlimited mic and captions."
-      : "Mic and captions share 10 free uses per day. Pro unlocks unlimited.";
-  }
-
-  if (isPro) {
-    statusBadge.textContent = "Status: Pro ✅";
-    limitInfo.textContent   = "Unlimited generations";
-    goProBtn.style.display = "none";
-  } else {
-    statusBadge.textContent = "Status: Free";
-    updateLimitDisplay();
-    goProBtn.style.display = "block";
-  }
-}
-
-/* =============== PRO STATUS CHECK =============== */
-async function refreshProStatus(){
-  try {
-    if (!email) {
-      let lastKnownPro = localStorage.getItem("lastKnownPro") === "true";
-      isPro = false;
-      localStorage.setItem("lastKnownPro", false);
-      applyUIForPro();
-      return;
-    }
-
-    const r = await fetch(CHECK_URL + "?email=" + encodeURIComponent(email), {
-      method: "GET",
-      headers: { "Accept":"application/json" }
-    });
-
-    if (!r.ok) {
-      isPro = false;
-      localStorage.setItem("lastKnownPro", false);
-      statusBadge.textContent = "Status: Free";
-      applyUIForPro();
-      console.warn("check failed", r.status);
-      return;
-    }
-
-    const data = await r.json();
-    isPro = !!(data && data.pro);
-    localStorage.setItem("lastKnownPro", isPro);
-    statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
-    applyUIForPro();
-
-  } catch (err) {
-    console.error("refreshProStatus error", err);
-    isPro = false;
-    localStorage.setItem("lastKnownPro", false);
-    statusBadge.textContent = "Status: Free";
-    applyUIForPro();
-  }
-}
-
-/* =============== EMAIL MODAL =============== */
-function openModal(){ modal.style.display = "flex"; }
-function closeModal(){ modal.style.display = "none"; }
-function persistEmail(v){
-  email = (v || "").trim();
-  if (email) localStorage.setItem("cc_email", email);
-}
-if (!email) openModal();
-
-saveEmail.addEventListener("click", async () => {
-  const v = emailInput.value.trim();
-  if (!v || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { alert("Pop a valid email in."); return; }
-  persistEmail(v);
-  closeModal();
-  await refreshProStatus();
-});
-skipEmail.addEventListener("click", () => {
-  closeModal();
-  updateLimitDisplay();
-  statusBadge.textContent = "Status: Guest (not Pro)";
-});
 
 /* =========================
    GENERATE CAPTIONS (server)
@@ -419,11 +385,10 @@ generateBtn.addEventListener("click", async () => {
     recordUse();
     outputs.innerHTML = "";
 
-    // build pill UI inside textarea box area
     captions.forEach(line => {
       const pill = document.createElement("button");
       pill.textContent = line;
-      pill.className = "pillCopy";
+      pill.className   = "pillCopy";
       pill.style.cssText = "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
 
       pill.addEventListener("click", () => {
@@ -447,7 +412,6 @@ generateBtn.addEventListener("click", async () => {
   }
 });
 
-
 /* =============== GO PRO (same tab) =============== */
 goProBtn.addEventListener("click", () => {
   window.location.href = STRIPE_LINK;
@@ -457,24 +421,23 @@ goProBtn.addEventListener("click", () => {
 (function boot(){
   try {
     if (email) emailInput.value = email;
-    
+
     micBtn.classList.remove("lock");
     updateLimitDisplay();
 
-    // force UI to believe last known state BEFORE anything paints
+    // Optimistic paint: use last known state immediately, then verify in background
     isPro = lastKnownPro;
-    statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
+    if (statusBadge) statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
     applyUIForPro();
 
-    // now server corrects silently in background
+    // Background verification, only repaints if state changes
     refreshProStatus();
   } catch (e) {
     console.error("boot error", e);
   }
 })();
 
-
-// Re-check Pro when user returns from Stripe tab
+/* =============== BACK FROM STRIPE/TAB FOCUS =============== */
 document.addEventListener("visibilitychange", ()=>{
   if (document.visibilityState === "visible") refreshProStatus();
 });
