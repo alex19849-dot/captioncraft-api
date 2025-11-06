@@ -331,7 +331,9 @@ async function refreshProStatus(){
   try {
     if (statusBadge) statusBadge.textContent = "Status: Checking...";
     if (!email) {
+      let lastKnownPro = localStorage.getItem("lastKnownPro") === "true";
       isPro = false;
+      localStorage.setItem("lastKnownPro", false);
       applyUIForPro();
       return;
     }
@@ -343,8 +345,8 @@ async function refreshProStatus(){
 
     if (!r.ok) {
       isPro = false;
-      statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
-
+      localStorage.setItem("lastKnownPro", false);
+      statusBadge.textContent = "Status: Free";
       applyUIForPro();
       console.warn("check failed", r.status);
       return;
@@ -352,10 +354,15 @@ async function refreshProStatus(){
 
     const data = await r.json();
     isPro = !!(data && data.pro);
+    localStorage.setItem("lastKnownPro", isPro);
+    statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
     applyUIForPro();
+
   } catch (err) {
     console.error("refreshProStatus error", err);
     isPro = false;
+    localStorage.setItem("lastKnownPro", false);
+    statusBadge.textContent = "Status: Free";
     applyUIForPro();
   }
 }
@@ -453,7 +460,9 @@ goProBtn.addEventListener("click", () => {
     if (email) emailInput.value = email;
     micBtn.classList.remove("lock");
     updateLimitDisplay();
-    statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
+    statusBadge.textContent = lastKnownPro ? "Status: Pro ✅" : "Status: Free";
+    isPro = lastKnownPro;
+    applyUIForPro();
     refreshProStatus();
   } catch (e) {
     console.error("boot error", e);
