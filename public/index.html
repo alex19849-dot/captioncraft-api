@@ -68,6 +68,7 @@
   <a href="/privacy.html" style="color:#6ee7ff;text-decoration:none;">Privacy Policy</a>
   <a href="/terms.html" style="color:#6ee7ff;text-decoration:none;">Terms & Conditions</a>
   <a href="/about.html" style="color:#6ee7ff;text-decoration:none;">About Us</a>
+    <a href="#" id="logoutLink" style="color:#6ee7ff;text-decoration:none;">Logout</a>
 </nav>
   <div style="margin-bottom:30px;font-size:13px;color:#8b95a7;text-align:center;">
   The Urban Creator, Made Better.
@@ -416,7 +417,14 @@ generateBtn.addEventListener("click", async () => {
 goProBtn.addEventListener("click", () => {
   window.location.href = STRIPE_LINK;
 });
-
+const logoutLink = $("logoutLink");
+logoutLink.addEventListener("click", (e) => {
+  e.preventDefault();
+  localStorage.removeItem("cc_email");
+  localStorage.removeItem("lastKnownPro");
+  localStorage.removeItem("captionUsageShared");
+  window.location.reload();
+});
 /* =============== BOOT =============== */
 (function boot(){
   try {
