@@ -68,9 +68,9 @@
   <a href="/privacy.html" style="color:#6ee7ff;text-decoration:none;">Privacy Policy</a>
   <a href="/terms.html" style="color:#6ee7ff;text-decoration:none;">Terms & Conditions</a>
   <a href="/about.html" style="color:#6ee7ff;text-decoration:none;">About Us</a>
-    <a href="#" id="logoutLink" style="color:#6ee7ff;text-decoration:none;">Logout</a>
     <a href="#" id="manageBilling" style="color:#6ee7ff;text-decoration:none;display:none;">Manage Billing</a>
     <a href="#" id="contactLink" style="color:#6ee7ff;text-decoration:none;">Contact</a>
+    <a href="#" id="logoutLink" style="color:#6ee7ff;text-decoration:none;">Logout</a>
 </nav>
   <div style="margin-bottom:30px;font-size:13px;color:#8b95a7;text-align:center;">
   The Urban Creator, Made Better.
@@ -181,7 +181,7 @@ const descEl      = $("desc");
 const toneEl      = $("tone");
 const generateBtn = $("generate");
 const proNote     = $("proNote");
-
+const logoutLink = $("logoutLink");
 /* =============== SHARED DAILY LIMIT (mic + text) =============== */
 function getUsage(){
   const today  = new Date().toISOString().slice(0,10);
@@ -230,7 +230,8 @@ function applyUIForPro(){
     manageBilling.style.display = "none";
   }
 }
-
+// logout only visible when user actually has an email stored
+logoutLink.style.display = email ? "inline" : "none";
 /* =============== PRO STATUS CHECK (optimistic, no flick) =============== */
 async function refreshProStatus(){
   try {
