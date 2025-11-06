@@ -329,7 +329,6 @@ function applyUIForPro(){
 /* =============== PRO STATUS CHECK =============== */
 async function refreshProStatus(){
   try {
-    if (statusBadge) statusBadge.textContent = "Status: Checking...";
     if (!email) {
       let lastKnownPro = localStorage.getItem("lastKnownPro") === "true";
       isPro = false;
