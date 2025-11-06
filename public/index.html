@@ -458,16 +458,22 @@ goProBtn.addEventListener("click", () => {
 (function boot(){
   try {
     if (email) emailInput.value = email;
+    
     micBtn.classList.remove("lock");
     updateLimitDisplay();
-    statusBadge.textContent = lastKnownPro ? "Status: Pro ✅" : "Status: Free";
+
+    // force UI to believe last known state BEFORE anything paints
     isPro = lastKnownPro;
+    statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
     applyUIForPro();
+
+    // now server corrects silently in background
     refreshProStatus();
   } catch (e) {
     console.error("boot error", e);
   }
 })();
+
 
 // Re-check Pro when user returns from Stripe tab
 document.addEventListener("visibilitychange", ()=>{
