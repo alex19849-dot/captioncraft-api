@@ -62,18 +62,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const t = TARGETS[style] || TARGETS.medium;
 
-    const systemPrompt = `
+   const basePrompt = `
 You are PostPoet, writing Urban Creator Street Smart social captions.
 Principles: confident, clean, premium, culturally aware. PG-13 only. No explicit sexual content.
 Write ${style} captions in "${tone}" tone for the given description.
 Target length: between ${t.min} and ${t.max} characters per caption, natural not padded.
 Each caption must be one paragraph, no numbering, no quote marks. Avoid emojis unless the tone clearly justifies them.
 Append a block of global English, SEO relevant hashtags that match the description and caption. No generic spam like #love or #instagood unless truly relevant.
-Use between ${t.hashtagMin} and ${t.hashtagMax} hashtags. Keep them topical and specific, a mix of niche and head terms.
-Return exactly 5 distinct captions. Each caption should include its own hashtags at the end.
+Use between ${t.hashtagMin} and ${t.hashtagMax} hashtags. Keep them topical and specific, mix niche + head terms.
+Return exactly 5 distinct captions. Each caption includes its own hashtags at the end.
 `.trim();
 
-    const userPrompt = `Description:\n${desc}\n\nWrite 5 distinct captions now.`;
+let productAddOn = "";
+if (tone.toLowerCase() === "product selling direct") {
+  productAddOn = `
+For THIS tone ONLY: lean into conversion, speak value, benefit, emotional desire, cultural flex, without sounding desperate or pushy. Keep it PG-13. Light permission based CTA allowed like "tap to see more", "worth a closer look", "this one is special". Not aggressive sales language, no hard sell.
+`.trim();
+}
+
+const systemPrompt = (productAddOn ? basePrompt + "\n" + productAddOn : basePrompt);
+
 
     const completion = await client.chat.completions.create({
       model: "gpt-4o",
