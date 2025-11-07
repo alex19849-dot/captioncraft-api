@@ -12,10 +12,12 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 type StyleKey = "short" | "medium" | "long";
 
 const TARGETS: Record<StyleKey, { min: number; max: number; hashtagMin: number; hashtagMax: number }> = {
-  short:  { min: 60,  max: 120, hashtagMin: 5,  hashtagMax: 8  },   // hooks/snipes
-  medium: { min: 120, max: 300, hashtagMin: 6,  hashtagMax: 10 },   // standard caption
-  long:   { min: 500, max: 900, hashtagMin: 8,  hashtagMax: 12 },   // story paragraph
+  short:  { min: 60,  max: 120, hashtagMin: 5,  hashtagMax: 8 },
+  medium: { min: 150, max: 250, hashtagMin: 6,  hashtagMax: 10 },
+  long:   { min: 350, max: 600, hashtagMin: 8,  hashtagMax: 12 },
 };
+
+const t = TARGETS[style] || TARGETS.medium;
 
 function coerceStyle(v: unknown): StyleKey {
   return (v === "short" || v === "medium" || v === "long") ? v : "medium";
