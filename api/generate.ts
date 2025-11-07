@@ -82,8 +82,28 @@ Long (story mode) should still lead toward the CTA outcome and not drift into pu
 Focus more on how the product transforms the user's lived experience, not just listing features or price.
 `.trim();
 }
+let lifestyleAddOn = "";
+const lifestyleTones = [
+  "british witty",
+  "american bold",
+  "australian laid-back",
+  "flirty",
+  "sarcastic",
+  "luxury",
+  "motivational",
+  "empathetic supportive",
+  "melancholic reflective",
+  "dark humour",
+  "savage roast"
+];
 
-const systemPrompt = (productAddOn ? basePrompt + "\n" + productAddOn : basePrompt);
+if (lifestyleTones.includes(tone.toLowerCase())) {
+  lifestyleAddOn = `
+First sentence should be a memeable, quotable hook or punchline style opener. It should read like something screenshot-worthy, instantly shareable, and culturally *repeatable*. Still PG-13. Still no hard sales CTA. Just a high-impact, viral hook as the opener.
+  `.trim();
+}
+
+const systemPrompt = [basePrompt, productAddOn, lifestyleAddOn].filter(Boolean).join("\n");
 const userPrompt = `Description:\n${desc}\n\nWrite 5 distinct captions now.`;
 
 
