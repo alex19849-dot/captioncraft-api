@@ -71,7 +71,7 @@ Return exactly 5 distinct captions. Each caption should include its own hashtags
 
     // Higher max_tokens to comfortably allow "long" story mode
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       temperature: 0.85,
       max_tokens: 900,
       messages: [
