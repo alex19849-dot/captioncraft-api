@@ -286,7 +286,7 @@ function recordUse(){
 }
 function updateLimitDisplay(){
   const d = getUsage();
-  if (limitInfo) limitInfo.textContent = `Free actions left today: ${Math.max(0, DAILY_LIMIT - d.used)} of ${DAILY_LIMIT}`;
+ limitInfo.textContent = `Free credits left today: ${Math.max(0, DAILY_LIMIT - d.used)} / ${DAILY_LIMIT}`;
 }
 
 /* =============== UI APPLY (Pro/Free + nav gating) =============== */
