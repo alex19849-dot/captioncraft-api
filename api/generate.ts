@@ -100,6 +100,7 @@ const lifestyleTones = [
 if (lifestyleTones.includes(tone.toLowerCase())) {
   lifestyleAddOn = `
 First sentence should be a memeable, quotable hook or punchline style opener. It should read like something screenshot-worthy, instantly shareable, and culturally *repeatable*. Still PG-13. Still no hard sales CTA. Just a high-impact, viral hook as the opener.
+Hooks should not start or end with quotes or quote marks.
   `.trim();
 }
 
