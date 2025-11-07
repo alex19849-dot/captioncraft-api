@@ -468,6 +468,7 @@ if ("webkitSpeechRecognition" in window) {
 generateBtn.addEventListener("click", async () => {
   const desc = (descEl.value || "").trim();
   const tone = toneEl.value;
+  const style = document.getElementById("style").value;
   if (!desc) { alert("Write a quick description first."); return; }
 
   if (!isPro && !canUse()) {
@@ -481,8 +482,8 @@ generateBtn.addEventListener("click", async () => {
     const r = await fetch(GENERATE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ desc, tone, email })
-    });
+    body: JSON.stringify({ desc, tone, style, email })
+
 
     if (!r.ok) {
       const t = await r.text();
