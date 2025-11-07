@@ -488,7 +488,8 @@ generateBtn.addEventListener("click", async () => {
       throw new Error(`API ${r.status}: ${t}`);
     }
 
-    const { captions } = await r.json();
+   const { captions, promptVersion } = await r.json();
+console.log("PromptVersion:", promptVersion);
     recordUse();
     outputs.innerHTML = "";
 
