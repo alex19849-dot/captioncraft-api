@@ -53,7 +53,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    const t = TARGETS[style];
+   const TARGETS: Record<StyleKey, { min: number; max: number; hashtagMin: number; hashtagMax: number }> = {
+  short:  { min: 60,  max: 120, hashtagMin: 5,  hashtagMax: 8 },
+  medium: { min: 150, max: 250, hashtagMin: 6,  hashtagMax: 10 },
+  long:   { min: 350, max: 600, hashtagMin: 8,  hashtagMax: 12 },
+};
 
     // System + user prompts tuned for Urban Creator Street Smart, PG-13, with SEO hashtags (global English)
     const systemPrompt = `
