@@ -160,7 +160,7 @@ const userPrompt = `Description:\n${desc}\n\nWrite 5 distinct captions now.`;
     // Hard safety cap per caption to avoid absurd overrun, not typical
     const safe = captions.slice(0, 5).map(c => (c.length > 1400 ? c.slice(0, 1400) : c));
 
-    return res.status(200).json({ captions: safe, pro: isPro, style });
+   return res.status(200).json({ captions: safe, pro: isPro, style, promptVersion: "v1.0.0-product-tuned" });
   } catch (e: any) {
     console.error("generate error:", e);
     return res.status(500).json({ error: e?.message || "Server error" });
