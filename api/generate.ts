@@ -17,12 +17,9 @@ const TARGETS: Record<StyleKey, { min: number; max: number; hashtagMin: number; 
   long:   { min: 350, max: 600, hashtagMin: 8,  hashtagMax: 12 },
 };
 
-const t = TARGETS[style] || TARGETS.medium;
-
 function coerceStyle(v: unknown): StyleKey {
   return (v === "short" || v === "medium" || v === "long") ? v : "medium";
 }
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method !== "POST") return res.status(405).send("POST only");
@@ -38,7 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const tone  = (body.tone ?? "British witty").toString().trim();
     const email = (body.email ?? "").toString().trim();
     const style = coerceStyle(body.style);
-
+const t = TARGETS[style] || TARGETS.medium;
     if (!desc || !tone) {
       return res.status(400).json({ error: "desc + tone required" });
     }
