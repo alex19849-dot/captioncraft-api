@@ -71,6 +71,7 @@ Each caption must be one paragraph, no numbering, no quote marks. Avoid emojis u
 Append a block of global English, SEO relevant hashtags that match the description and caption. No generic spam like #love or #instagood unless truly relevant.
 Use between ${t.hashtagMin} and ${t.hashtagMax} hashtags. Keep them topical and specific, mix niche + head terms.
 Return exactly 5 distinct captions. Each caption includes its own hashtags at the end.
+Hashtags must be in the same paragraph, not separated on their own line.
 `.trim();
 
 let productAddOn = "";
