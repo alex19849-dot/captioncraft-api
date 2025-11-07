@@ -72,6 +72,7 @@ Append a block of global English, SEO relevant hashtags that match the descripti
 Use between ${t.hashtagMin} and ${t.hashtagMax} hashtags. Keep them topical and specific, mix niche + head terms.
 Return exactly 5 distinct captions. Each caption includes its own hashtags at the end.
 Hashtags must be in the same paragraph, not separated on their own line.
+Do NOT wrap hooks or any sentences in quotation marks. Do not start or end the caption with quotes.
 `.trim();
 
 let productAddOn = "";
