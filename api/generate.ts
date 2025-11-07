@@ -77,8 +77,8 @@ let productAddOn = "";
 if (tone.toLowerCase() === "product selling direct") {
   productAddOn = `
 For THIS tone ONLY: lean into conversion, speak value, benefit, emotional desire, cultural flex, without sounding desperate or pushy. Keep it PG-13. Light permission based CTA allowed like "tap to see more", "worth a closer look", "this one is special". Not aggressive sales language, no hard sell.
+Long (story mode) should still lead toward the CTA outcome and not drift into pure aesthetic editorial.
 `.trim();
-  Long (story mode) should still lead toward the CTA outcome and not drift into pure aesthetic editorial.
 }
 
 const systemPrompt = (productAddOn ? basePrompt + "\n" + productAddOn : basePrompt);
