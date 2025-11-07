@@ -81,6 +81,7 @@ For THIS tone ONLY: lean into conversion, speak value, benefit, emotional desire
 }
 
 const systemPrompt = (productAddOn ? basePrompt + "\n" + productAddOn : basePrompt);
+const userPrompt = `Description:\n${desc}\n\nWrite 5 distinct captions now.`;
 
 
     const completion = await client.chat.completions.create({
