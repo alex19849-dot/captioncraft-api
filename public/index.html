@@ -291,37 +291,34 @@ function recordUse(){
 }
 function updateLimitDisplay(){
   const d = getUsage();
- limitInfo.textContent = `Free credits left today: ${Math.max(0, DAILY_LIMIT - d.used)} / ${DAILY_LIMIT}`;
+  if (limitInfo) limitInfo.textContent = `Free credits left today: ${Math.max(0, DAILY_LIMIT - d.used)} / ${DAILY_LIMIT}`;
 }
 
 /* =============== UI APPLY (Pro/Free + nav gating) =============== */
 function applyUIForPro(){
-  // kill any legacy "Pro" badge on mic (design change)
-  const legacyPro = micBtn?.querySelector(".pro");
+  const legacyPro = micBtn?.querySelector?.(".pro");
   if (legacyPro) legacyPro.remove();
 
-  // mic always enabled visually, we gate by limit
-  micBtn.classList.remove("lock");
-  micBtn.title = isPro ? "Hold to speak your idea, release to stop"
-                       : "Hold to speak, counts toward your free daily limit";
+  if (micBtn){
+    micBtn.classList.remove("lock");
+    micBtn.title = isPro ? "Hold to speak your idea, release to stop"
+                         : "Hold to speak, counts toward your free daily limit";
+  }
 
-  // show/hide Go Pro, limit text, status
   if (isPro) {
     if (statusBadge) statusBadge.textContent = "Status: Pro ✅";
     if (limitInfo)  limitInfo.textContent    = "Unlimited generations";
     if (goProBtn)   goProBtn.style.display   = "none";
-    manageBilling.style.display = "inline";
+    if (manageBilling) manageBilling.style.display = "inline";
   } else {
     if (statusBadge) statusBadge.textContent = "Status: Free";
     updateLimitDisplay();
     if (goProBtn)   goProBtn.style.display   = "block";
-    manageBilling.style.display = "none";
+    if (manageBilling) manageBilling.style.display = "none";
   }
 
-  // logout visible only if user has saved an email
-  logoutLink.style.display = email ? "inline" : "none";
+  if (logoutLink) logoutLink.style.display = email ? "inline" : "none";
 
-  // pro note text
   if (proNote) {
     proNote.style.display = isPro ? "none" : "block";
     proNote.textContent = "Mic and captions share 10 free uses per day. Pro unlocks unlimited.";
@@ -353,7 +350,6 @@ async function refreshProStatus(){
     const data = await r.json();
     const newState = !!(data && data.pro);
 
-    // only repaint if state changed
     if (newState !== isPro) {
       isPro = newState;
       localStorage.setItem("lastKnownPro", String(isPro));
@@ -362,27 +358,26 @@ async function refreshProStatus(){
     }
   } catch (err) {
     console.error("refreshProStatus error", err);
-    // keep optimistic UI
   }
 }
 
 /* =============== EMAIL MODAL (capture) =============== */
-function openModal(){ modal.style.display = "flex"; }
-function closeModal(){ modal.style.display = "none"; }
+function openModal(){ if (modal) modal.style.display = "flex"; }
+function closeModal(){ if (modal) modal.style.display = "none"; }
 function persistEmail(v){
   email = (v || "").trim();
   if (email) localStorage.setItem("cc_email", email);
 }
 if (!email) openModal();
 
-saveEmail.addEventListener("click", async () => {
-  const v = emailInput.value.trim();
+if (saveEmail) saveEmail.addEventListener("click", async () => {
+  const v = emailInput?.value.trim();
   if (!v || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { alert("Pop a valid email in."); return; }
   persistEmail(v);
   closeModal();
   await refreshProStatus();
 });
-skipEmail.addEventListener("click", () => {
+if (skipEmail) skipEmail.addEventListener("click", () => {
   closeModal();
   updateLimitDisplay();
   if (statusBadge) statusBadge.textContent = "Status: Guest (not Pro)";
@@ -420,16 +415,18 @@ if ("webkitSpeechRecognition" in window) {
     try { recognition.stop(); } catch (_) {}
   }
 
-  // Desktop press/hold
-  micBtn.addEventListener("mousedown", startMic, { passive: false });
-  micBtn.addEventListener("mouseup",   stopMic,  { passive: false });
-  micBtn.addEventListener("mouseleave",stopMic,  { passive: false });
-  // Mobile press/hold
-  micBtn.addEventListener("touchstart", startMic, { passive: false });
-  micBtn.addEventListener("touchend",   stopMic,  { passive: false });
-  micBtn.addEventListener("touchcancel",stopMic,  { passive: false });
-  // Single tap toggle
-  micBtn.addEventListener("click", (e) => { if (!listening) startMic(e); else stopMic(e); });
+  if (micBtn){
+    // Desktop press/hold
+    micBtn.addEventListener("mousedown", startMic, { passive: false });
+    micBtn.addEventListener("mouseup",   stopMic,  { passive: false });
+    micBtn.addEventListener("mouseleave",stopMic,  { passive: false });
+    // Mobile press/hold
+    micBtn.addEventListener("touchstart", startMic, { passive: false });
+    micBtn.addEventListener("touchend",   stopMic,  { passive: false });
+    micBtn.addEventListener("touchcancel",stopMic,  { passive: false });
+    // Single tap toggle
+    micBtn.addEventListener("click", (e) => { if (!listening) startMic(e); else stopMic(e); });
+  }
 
   recognition.onresult = (event) => {
     for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -459,18 +456,18 @@ if ("webkitSpeechRecognition" in window) {
     }
   };
 } else {
-  micBtn.title = "Speech to text not supported in this browser";
+  if (micBtn) micBtn.title = "Speech to text not supported in this browser";
 }
 
 /* =========================
    GENERATE CAPTIONS (server)
 ========================= */
 generateBtn.addEventListener("click", async () => {
-  const desc = (descEl.value || "").trim();
-  const tone = toneEl.value;
-  const style = document.getElementById("style").value;
-  if (!desc) { alert("Write a quick description first."); return; }
+  const desc  = (descEl.value || "").trim();
+  const tone  = toneEl.value;
+  const style = (document.getElementById("style")?.value) || "medium";
 
+  if (!desc) { alert("Write a quick description first."); return; }
   if (!isPro && !canUse()) {
     alert("You’ve used your free captions today. Go Pro for unlimited.");
     return;
@@ -482,8 +479,8 @@ generateBtn.addEventListener("click", async () => {
     const r = await fetch(GENERATE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ desc, tone, style, email })
-
+      body: JSON.stringify({ desc, tone, style, email })
+    });
 
     if (!r.ok) {
       const t = await r.text();
@@ -499,6 +496,8 @@ generateBtn.addEventListener("click", async () => {
       pill.textContent = line;
       pill.className   = "pillCopy";
       pill.style.cssText = "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
+      pill.style.whiteSpace = "normal";
+      pill.style.wordBreak  = "break-word";
 
       pill.addEventListener("click", () => {
         navigator.clipboard.writeText(line);
@@ -522,11 +521,11 @@ generateBtn.addEventListener("click", async () => {
 });
 
 /* =============== NAV ACTIONS (Go Pro, Logout, Billing, Contact) =============== */
-goProBtn.addEventListener("click", () => {
+if (goProBtn) goProBtn.addEventListener("click", () => {
   window.location.href = STRIPE_LINK;
 });
 
-logoutLink.addEventListener("click", (e) => {
+if (logoutLink) logoutLink.addEventListener("click", (e) => {
   e.preventDefault();
   localStorage.removeItem("cc_email");
   localStorage.removeItem("lastKnownPro");
@@ -534,32 +533,30 @@ logoutLink.addEventListener("click", (e) => {
   window.location.reload();
 });
 
-manageBilling.addEventListener("click", (e) => {
+if (manageBilling) manageBilling.addEventListener("click", (e) => {
   e.preventDefault();
   window.location.href = "https://billing.stripe.com/p/login/5kQ4gyeFb5B4bZDb118Zq00";
 });
 
-contactLink.addEventListener("click", (e) => {
+if (contactLink) contactLink.addEventListener("click", (e) => {
   e.preventDefault();
-  contactModal.style.display = "flex";
+  if (contactModal) contactModal.style.display = "flex";
 });
-closeContact.addEventListener("click", () => {
-  contactModal.style.display = "none";
+if (closeContact) closeContact.addEventListener("click", () => {
+  if (contactModal) contactModal.style.display = "none";
 });
 
 /* =============== BOOT =============== */
 (function boot(){
   try {
-    if (email) emailInput.value = email;
-    micBtn.classList.remove("lock");
+    if (email && emailInput) emailInput.value = email;
+    if (micBtn) micBtn.classList.remove("lock");
     updateLimitDisplay();
 
-    // optimistic paint using last known state
     isPro = lastKnownPro;
     if (statusBadge) statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
     applyUIForPro();
 
-    // verify in background, repaint only if changed
     refreshProStatus();
   } catch (e) {
     console.error("boot error", e);
@@ -571,7 +568,6 @@ document.addEventListener("visibilitychange", ()=>{
   if (document.visibilityState === "visible") refreshProStatus();
 });
 </script>
-
 </body>
 </html>
 
