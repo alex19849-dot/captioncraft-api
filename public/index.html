@@ -376,6 +376,7 @@ function updateLimitDisplay(){
 
 /* =============== UI APPLY (Pro/Free + nav gating) =============== */
 function applyUIForPro(){
+  if (!proChecked) return;
   const legacyPro = micBtn?.querySelector?.(".pro");
   if (legacyPro) legacyPro.remove();
 
