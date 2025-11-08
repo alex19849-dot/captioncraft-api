@@ -54,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (email) {
       try {
         const exists = await redis.sismember("pro_users", email);
-        isPro = exists === 1 || exists === true || exists === "1";
+        isPro = String(exists) === "1";
       } catch (e) {
         console.error("Redis error:", e);
       }
