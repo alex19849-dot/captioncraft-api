@@ -437,6 +437,8 @@ async function refreshProStatus(){
       if (statusBadge) statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
       applyUIForPro();
     }
+    proChecked = true;
+applyUIForPro();
   } catch (err) {
     console.error("refreshProStatus error", err);
   }
