@@ -33,41 +33,39 @@
       width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:#0e121a; color:var(--text); font-size:14px;
     }
 /* BRAND TITLE */
+/* BRAND MARK */
 #brandTitle{
   font-family: Inter, system-ui, sans-serif;
-  font-size:40px;           /* scale */
+  font-size:38px;
   font-weight:900;
-  line-height:1.05;         /* prevents overlap */
   color:#e8ecf1;
+  letter-spacing:0.5px;
+  text-align:center;
   display:inline-block;
   position:relative;
-  left:50%; transform:translateX(-50%); /* perfectly centered */
-  margin:0 auto 22px;       /* space below so it doesn't cover text */
-  padding:0 6px;
-  letter-spacing:1px;
-  text-align:center;
+  margin:0 auto 20px auto;
+  left:50%;
+  transform:translateX(-50%);
+  padding:0;
 }
 
-/* cyan underline, centered, not full width */
+/* Ps */
+#brandTitle .pBlue{
+  color:#6ee7ff;
+}
+
+/* underline clean + thin + full reach + baseline */
 #brandTitle::after{
   content:"";
   position:absolute;
   height:3px;
   width:100%;
-  left:50%; transform:translateX(-50%);
-  bottom:2px;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:-3px;
   background:#6ee7ff;
   pointer-events:none;
 }
-#brandTitle::after{
-  all:unset;
-  content:"";
-  position:absolute;
-  height:3px;
-  width:100%;
-  left:50%; transform:translateX(-50%);
-  bottom:-2px;
-  background:#6ee7ff !important;
 }
 /* cyan Ps */
 #brandTitle .pBlue{ color:#6ee7ff; }
