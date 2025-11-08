@@ -52,13 +52,23 @@
 #brandTitle::after{
   content:"";
   position:absolute;
-  height:3px; /* thinner */
-  width:100%; /* full reach */
+  height:3px;
+  width:100%;
   left:50%; transform:translateX(-50%);
-  bottom:2px; /* closer to letters */
+  bottom:2px;
   background:#6ee7ff;
+  pointer-events:none;
 }
-
+#brandTitle::after{
+  all:unset;
+  content:"";
+  position:absolute;
+  height:3px;
+  width:100%;
+  left:50%; transform:translateX(-50%);
+  bottom:-2px;
+  background:#6ee7ff !important;
+}
 /* cyan Ps */
 #brandTitle .pBlue{ color:#6ee7ff; }
 
