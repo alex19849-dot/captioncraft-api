@@ -32,18 +32,30 @@
     textarea,input,select,button{
       width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:#0e121a; color:var(--text); font-size:14px;
     }
-    .brandTitle{
-  font-size:38px;
-  font-weight:800;
-  letter-spacing:1px;
+    .ppBrand{
+  font-family: Inter, system-ui, sans-serif;
+  font-size:58px;
+  font-weight:900;
   color:#e8ecf1;
   text-align:center;
+  letter-spacing:1px;
+  position:relative;
+  display:inline-block;
+  margin:0 auto;
 }
 
-.pBlue{
+.ppBrand::after{
+  content:"";
+  position:absolute;
+  bottom:-8px;
+  left:0;
+  width:100%;
+  height:8px;
+  background:#6ee7ff;
+}
+
+.ppP{
   color:#6ee7ff;
-  border-bottom:3px solid #6ee7ff;
-  padding-bottom:2px;
 }
     select{cursor:pointer}
     .row{display:grid; gap:12px}
@@ -165,9 +177,9 @@
 
 
   <div class="card">
-    <h1 class="brandTitle">
-  <span class="pBlue">P</span>ost<span class="pBlue">P</span>oet
-    </h1>
+    <h1 class="ppBrand">
+  <span class="ppP">P</span>ost<span class="ppP">P</span>oet
+</h1>
     <p class="sub">AI built for creators who actually have taste. Say more in less words, get more reach with less effort.</p>
     <p class="sub" style="margin-top:6px;color:#6ee7ff;font-size:13px;opacity:.8;">Designed for the ones who know how the culture moves, not the algorithm.</p>
 
