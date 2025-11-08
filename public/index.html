@@ -32,9 +32,9 @@
     textarea,input,select,button{
       width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:#0e121a; color:var(--text); font-size:14px;
     }
-    .ppBrand{
+.ppBrand{
   font-family: Inter, system-ui, sans-serif;
-  font-size:58px;
+  font-size:40px;   /* was 58 */
   font-weight:900;
   color:#e8ecf1;
   text-align:center;
@@ -42,15 +42,18 @@
   position:relative;
   display:inline-block;
   margin:0 auto;
+  padding:0 6px;
 }
 
 .ppBrand::after{
   content:"";
   position:absolute;
-  bottom:-8px;
+  bottom:-6px;
   left:0;
-  width:100%;
-  height:8px;
+  right:0;
+  width:72%;    /* was 82 */
+  margin:auto;
+  height:8px;   /* was 10 */
   background:#6ee7ff;
 }
 
