@@ -637,10 +637,6 @@ if (closeContact) closeContact.addEventListener("click", () => {
     if (micBtn) micBtn.classList.remove("lock");
     updateLimitDisplay();
 
-    isPro = lastKnownPro;
-    if (statusBadge) statusBadge.textContent = isPro ? "Status: Pro ✅" : "Status: Free";
-    applyUIForPro();
-
     refreshProStatus();
   } catch (e) {
     console.error("boot error", e);
