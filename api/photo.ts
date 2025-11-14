@@ -19,13 +19,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { imageBase64, email } = req.body;
+    const { imageBase64 } = req.body;
 
     if (!imageBase64) {
       return res.status(400).json({ error: "Missing image" });
     }
 
-    // NEW OpenAI Vision request format
+    // Vision request using image_url (valid format)
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -34,32 +34,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           content: [
             {
               type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${imageBase64}`
-              }
+              image_url: `data:image/jpeg;base64,${imageBase64}`
             },
             {
               type: "text",
-              text: "Write a short, catchy caption based on what you see in the image. Social media style, natural, no hashtags."
+              text: "Look at this image and create 5 short, social-ready captions with relevant hashtags. Output each caption on a separate line."
             }
           ]
         }
       ]
     });
 
-   let raw = response.choices?.[0]?.message?.content || "";
-raw = raw.replace(/^"+|"+$/g, "").trim(); // remove stray quotes
+    let raw = response.choices?.[0]?.message?.content || "";
+    raw = raw.replace(/^"+|"+$/g, "").trim();
 
-// turn the single caption into an array, OR split if model gives multiple lines later
-const captions = [raw];
+    // Split into individual captions
+    const captions = raw
+      .split("\n")
+      .map(c => c.trim())
+      .filter(c => c.length > 0);
 
-res.status(200).json({
-  captions,
-  pro: true
-});
+    res.status(200).json({ captions });
 
   } catch (err: any) {
-    console.error("PHOTO API ERROR:", err);
+    console.error(err);
     res.status(500).json({ error: err.message || "Server error" });
   }
 }
