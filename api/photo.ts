@@ -48,9 +48,9 @@ Follow these rules strictly:
 - Always include 3 to 7 relevant hashtags per caption.
 - Use the tone above in the wording (for example: "Product selling direct" should feel sales focused but not scammy).
 - Use the style above for length:
-  • "short" or "Punchy Short": around 40–80 characters, tight hooky, still with hashtags.
-  • "medium" or "Normal Caption": around 80–180 characters.
-  • "long" or "Story Mode": around 180–320 characters, more narrative.
+  • "short" or "Punchy Short": around 80–120 characters, tight hooky, still with hashtags.
+  • "medium" or "Normal Caption": around 120–250 characters.
+  • "long" or "Story Mode": around 320–550 characters, more narrative.
 - Do NOT mention "tone", "style", "PostPoet" or describe what you are doing.
 - Do NOT output headings, labels, markdown, bullet points or numbering.
 - Output ONLY the 5 captions, each on its own line, nothing else.
