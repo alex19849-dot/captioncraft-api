@@ -6,94 +6,98 @@ const client = new OpenAI({
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "https://postpoet.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "POST only" });
+  }
 
   try {
-    // Frontend sends { imageBase64: "...", email: "..." }
-    console.log("BODY RECEIVED:", typeof req.body, req.body);
-console.log("imageBase64 exists:", !!req.body?.imageBase64);
-console.log("email exists:", !!req.body?.email);
-    const { imageBase64 } = req.body;
+    const { imageBase64, email, tone, style } = (req.body || {}) as {
+      imageBase64?: string;
+      email?: string;
+      tone?: string;
+      style?: string;
+    };
 
-    if (!imageBase64) {
-      return res.status(400).json({ error: "Missing base64 image" });
+    if (!imageBase64 || typeof imageBase64 !== "string") {
+      return res.status(400).json({ error: "Missing imageBase64" });
     }
 
-    // OpenAI Vision call
-   const response = await client.chat.completions.create({
-  model: "gpt-4o",
-  messages: [
-    {
-      role: "user",
-      content: [
+    const toneValue  = (tone  && tone.trim())  || "Product selling direct";
+    const styleValue = (style && style.trim()) || "medium";
+
+    const prompt = `
+You are PostPoet, an AI caption writer for social content.
+
+The user has uploaded a product or lifestyle photo.
+
+Tone: ${toneValue}
+Style: ${styleValue}
+
+Follow these rules strictly:
+- Write 5 different captions, one per line.
+- Make them suitable for social media (Instagram, TikTok, Vinted, Depop, eBay).
+- Always include 3 to 7 relevant hashtags per caption.
+- Use the tone above in the wording (for example: "Product selling direct" should feel sales focused but not scammy).
+- Use the style above for length:
+  • "short" or "Punchy Short": around 40–80 characters, tight hooky, still with hashtags.
+  • "medium" or "Normal Caption": around 80–180 characters.
+  • "long" or "Story Mode": around 180–320 characters, more narrative.
+- Do NOT mention "tone", "style", "PostPoet" or describe what you are doing.
+- Do NOT output headings, labels, markdown, bullet points or numbering.
+- Output ONLY the 5 captions, each on its own line, nothing else.
+`;
+
+    const response = await client.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
         {
-          type: "image_url",
-          image_url: {
-            url: `data:image/jpeg;base64,${imageBase64}`
-          }
-        },
-        {
-          type: "text",
-          text: `
-You are PostPoet, generating 5 high converting social captions for creators.
-The user has selected:
-Tone: ${tone}
-Style: ${style}
-
-Follow these rules ONLY:
-• Apply the tone when generating captions
-• Apply the style length with the character targets
-• DO NOT repeat or display the tone or style in the output
-• DO NOT output headings, labels or markdown
-• ONLY output the 5 captions, one per line, nothing else
-
-The user has uploaded a photo. Analyse the image in detail AND apply:
-• the selected tone (witty, luxury, sarcastic, product selling direct, etc)
-• the selected style length (short, medium, story mode)
-• the user’s written description if it's provided
-
-Rules:
-1. If style = short, keep each caption 40 to 70 characters.
-2. If style = medium, keep each caption 90 to 160 characters.
-3. If style = long (story mode), keep each caption 220 to 350 characters.
-4. Captions must SELL the exact item in the image, not generic lifestyle waffle.
-5. Use specific adjectives, features, benefits, context and emotional hooks.
-6. Include 3 to 8 relevant hashtags depending on style:
-   • Short → 3 or 4 hashtags
-   • Medium → 5 or 6 hashtags
-   • Story Mode → 6 to 8 hashtags
-7. No quotes around outputs.
-8. Output each caption on its own separate line, no numbering.
-
-Be bold, persuasive and scroll-stopping. Keep the writing human and social ready.
-`
-
+          role: "user",
+          content: [
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${imageBase64}`
+              }
+            },
+            {
+              type: "text",
+              text: prompt
+            }
+          ]
         }
       ]
-    }
-  ]
-});
+    });
 
     let raw = response.choices?.[0]?.message?.content || "";
 
-    // Remove accidental quotes
+    if (typeof raw !== "string") {
+      raw = String(raw ?? "");
+    }
+
     raw = raw.replace(/^"+|"+$/g, "").trim();
 
-    // Split into lines
     const captions = raw
       .split("\n")
-      .map(x => x.trim())
-      .filter(x => x.length > 0);
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
 
-    res.status(200).json({ captions });
+    if (!captions.length) {
+      return res.status(500).json({ error: "No captions generated" });
+    }
+
+    return res.status(200).json({ captions });
 
   } catch (err: any) {
     console.error("PHOTO API ERROR:", err);
-    res.status(500).json({ error: err.message || "Server error" });
+    return res.status(500).json({ error: err.message || "Server error" });
   }
 }
