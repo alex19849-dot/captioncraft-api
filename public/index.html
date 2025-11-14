@@ -464,56 +464,47 @@ hiddenPhotoInput.addEventListener("change", async () => {
   const file = hiddenPhotoInput.files[0];
   if (!file) return;
 
-  outputs.innerHTML = "<div class='out'>Analyzing photo…</div>";
+  outputs.innerHTML = "<div class='out'>Reading your photo…</div>";
 
-  try {
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("email", email);
-    formData.append("tone", toneEl.value || "witty");
-    formData.append("style", document.getElementById("style")?.value || "medium");
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const base64 = reader.result.split(",")[1];
 
-    // This endpoint does NOT exist yet. We'll build it in Step 7.
-    const r = await fetch("https://postpoet-api.vercel.app/api/photo", {
-      method: "POST",
-      body: formData
-    });
+    outputs.innerHTML = "<div class='out'>Generating caption from your image…</div>";
 
-    if (!r.ok) {
-      const t = await r.text();
-      throw new Error(`API ${r.status}: ${t}`);
-    }
+    try {
+      const r = await fetch(PHOTO_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: base64,
+          email
+        })
+      });
 
-    const { captions } = await r.json();
+      const data = await r.json();
+      outputs.innerHTML = "";
 
-    outputs.innerHTML = "";
-    (captions || []).forEach(line => {
+      const caption = data.caption || "No caption generated";
+
       const pill = document.createElement("button");
-      pill.textContent = line;
+      pill.textContent = caption;
       pill.className   = "pillCopy";
       pill.style.cssText = "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
-      pill.style.whiteSpace = "normal";
-      pill.style.wordBreak  = "break-word";
-
       pill.addEventListener("click", () => {
-        navigator.clipboard.writeText(line);
-        pill.style.borderColor="#6ee7ff";
-        pill.style.background="#112030";
-        pill.textContent="Copied ✓";
-        setTimeout(()=>{
-          pill.textContent=line;
-          pill.style.borderColor="#2e364b";
-          pill.style.background="#181f2d";
-        }, 900);
+        navigator.clipboard.writeText(caption);
+        pill.textContent = "Copied";
       });
 
       outputs.appendChild(pill);
-    });
 
-  } catch (err) {
-    outputs.innerHTML = `<div class='out' style='color:#ff6b6b;'>Error: ${err.message}</div>`;
-    console.error(err);
-  }
+    } catch (err) {
+      console.error(err);
+      outputs.innerHTML = `<div class='out' style='color:#ff6b6b'>Error generating caption</div>`;
+    }
+  };
+
+  reader.readAsDataURL(file);
 });
 
 
