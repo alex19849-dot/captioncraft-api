@@ -1,32 +1,28 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import OpenAI from "openai";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "https://postpoet.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "POST only" });
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
   try {
-   const body = await req.json();
-const { imageBase64 } = body;
+    // Vercel auto-parses multipart form-data into req.body as Buffers
+    const file = req.body?.image;
 
-    if (!imageBase64) {
-      return res.status(400).json({ error: "Missing image" });
+    if (!file) {
+      return res.status(400).json({ error: "No file received" });
     }
 
-    // Vision request using image_url (valid format)
+    // Convert buffer to base64
+    const imageBase64 = Buffer.from(file).toString("base64");
+
+    // --- OpenAI Vision ---
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -39,7 +35,7 @@ const { imageBase64 } = body;
             },
             {
               type: "text",
-              text: "Look at this image and create 5 short, social-ready captions with relevant hashtags. Output each caption on a separate line."
+              text: "Generate 5 short captions with hashtags. One caption per line."
             }
           ]
         }
@@ -49,11 +45,10 @@ const { imageBase64 } = body;
     let raw = response.choices?.[0]?.message?.content || "";
     raw = raw.replace(/^"+|"+$/g, "").trim();
 
-    // Split into individual captions
     const captions = raw
       .split("\n")
-      .map(c => c.trim())
-      .filter(c => c.length > 0);
+      .map(x => x.trim())
+      .filter(x => x.length > 0);
 
     res.status(200).json({ captions });
 
