@@ -41,6 +41,16 @@ console.log("email exists:", !!req.body?.email);
           type: "text",
           text: `
 You are PostPoet, generating 5 high converting social captions for creators.
+The user has selected:
+Tone: ${tone}
+Style: ${style}
+
+Follow these rules ONLY:
+• Apply the tone when generating captions
+• Apply the style length with the character targets
+• DO NOT repeat or display the tone or style in the output
+• DO NOT output headings, labels or markdown
+• ONLY output the 5 captions, one per line, nothing else
 
 The user has uploaded a photo. Analyse the image in detail AND apply:
 • the selected tone (witty, luxury, sarcastic, product selling direct, etc)
