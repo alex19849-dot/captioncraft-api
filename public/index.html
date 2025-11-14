@@ -435,6 +435,12 @@ const CHECK_URL    = "https://postpoet-api.vercel.app/api/check";
   if (closeContact) closeContact.addEventListener("click", () => {
     if (contactModal) contactModal.style.display = "none";
   });
+    const hiddenPhotoInput = document.createElement("input");
+hiddenPhotoInput.type = "file";
+hiddenPhotoInput.accept = "image/*";
+hiddenPhotoInput.style.display = "none";
+
+document.body.appendChild(hiddenPhotoInput);
    const photoBtn = document.getElementById("photoBtn");
 
 if (photoBtn) {
