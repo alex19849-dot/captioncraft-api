@@ -459,7 +459,6 @@ if (photoBtn) {
   });
 }
 
-// Create hidden input (not visible)
 hiddenPhotoInput.addEventListener("change", async () => {
   const file = hiddenPhotoInput.files[0];
   if (!file) return;
@@ -483,24 +482,38 @@ hiddenPhotoInput.addEventListener("change", async () => {
       });
 
       const data = await r.json();
+
+      const captions = data.captions || [];
       outputs.innerHTML = "";
 
-      const caption = data.caption || "No caption generated";
+      captions.forEach(line => {
+        const pill = document.createElement("button");
+        pill.textContent = line;
+        pill.className   = "pillCopy";
+        pill.style.cssText =
+          "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
+        pill.style.whiteSpace = "normal";
+        pill.style.wordBreak = "break-word";
 
-      const pill = document.createElement("button");
-      pill.textContent = caption;
-      pill.className   = "pillCopy";
-      pill.style.cssText = "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
-      pill.addEventListener("click", () => {
-        navigator.clipboard.writeText(caption);
-        pill.textContent = "Copied";
+        pill.addEventListener("click", () => {
+          navigator.clipboard.writeText(line);
+          pill.style.borderColor = "#6ee7ff";
+          pill.style.background = "#112030";
+          pill.textContent = "Copied ✅";
+          setTimeout(() => {
+            pill.textContent = line;
+            pill.style.borderColor = "#2e364b";
+            pill.style.background = "#181f2d";
+          }, 900);
+        });
+
+        outputs.appendChild(pill);
       });
-
-      outputs.appendChild(pill);
 
     } catch (err) {
       console.error(err);
-      outputs.innerHTML = `<div class='out' style='color:#ff6b6b'>Error generating caption</div>`;
+      outputs.innerHTML =
+        `<div class='out' style='color:#ff6b6b'>Error generating caption</div>`;
     }
   };
 
