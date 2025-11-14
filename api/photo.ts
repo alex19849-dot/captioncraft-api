@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Missing image" });
     }
 
-    // OpenAI Vision request
+    // NEW OpenAI Vision request format
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -33,27 +33,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           role: "user",
           content: [
             {
-              type: "input_image",
-              image_url: `data:image/jpeg;base64,${imageBase64}`
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${imageBase64}`
+              }
             },
             {
               type: "text",
-              text: "Look at this image and create a caption based on what you see. Keep it short, snappy, and social-media ready."
+              text: "Write a short, catchy caption based on what you see in the image. Social media style, natural, no hashtags."
             }
           ]
         }
       ]
     });
 
-    const caption = response.choices?.[0]?.message?.content || "Couldn't generate";
+    const caption = response.choices?.[0]?.message?.content || "No caption generated";
 
     res.status(200).json({
       caption,
-      pro: true // optional, doesn't matter for now
+      pro: true
     });
 
   } catch (err: any) {
-    console.error(err);
+    console.error("PHOTO API ERROR:", err);
     res.status(500).json({ error: err.message || "Server error" });
   }
 }
