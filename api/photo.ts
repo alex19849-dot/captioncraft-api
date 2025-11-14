@@ -15,6 +15,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     // Frontend sends { imageBase64: "...", email: "..." }
+    console.log("BODY RECEIVED:", typeof req.body, req.body);
+console.log("imageBase64 exists:", !!req.body?.imageBase64);
+console.log("email exists:", !!req.body?.email);
     const { imageBase64 } = req.body;
 
     if (!imageBase64) {
