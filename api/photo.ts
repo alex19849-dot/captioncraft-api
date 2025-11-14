@@ -19,7 +19,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { imageBase64 } = req.body;
+   const body = await req.json();
+const { imageBase64 } = body;
 
     if (!imageBase64) {
       return res.status(400).json({ error: "Missing image" });
