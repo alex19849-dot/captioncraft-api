@@ -39,7 +39,19 @@ console.log("email exists:", !!req.body?.email);
         },
         {
           type: "text",
-          text: "Look at the image and generate 5 short captions with hashtags. One caption per line."
+          text: `
+You are creating 5 high converting captions for PRODUCT SELLING DIRECT RESPONSE.
+Look at the image and write captions that SELL the item shown.
+
+Rules:
+• Apply the requested tone (witty, luxury, sarcastic, product selling direct etc).
+• Apply the requested style length (short, medium, story mode).
+• Be specific to the product in the image, no generic phrases.
+• Include strong, relevant hashtags.
+• No quotes around outputs.
+• Each caption MUST be on its own separate line.
+`
+
         }
       ]
     }
