@@ -47,12 +47,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ]
     });
 
-    const caption = response.choices?.[0]?.message?.content || "No caption generated";
+   let raw = response.choices?.[0]?.message?.content || "";
+raw = raw.replace(/^"+|"+$/g, "").trim(); // remove stray quotes
 
-    res.status(200).json({
-      caption,
-      pro: true
-    });
+// turn the single caption into an array, OR split if model gives multiple lines later
+const captions = [raw];
+
+res.status(200).json({
+  captions,
+  pro: true
+});
 
   } catch (err: any) {
     console.error("PHOTO API ERROR:", err);
