@@ -25,24 +25,26 @@ console.log("email exists:", !!req.body?.email);
     }
 
     // OpenAI Vision call
-    const response = await client.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
+   const response = await client.chat.completions.create({
+  model: "gpt-4o",
+  messages: [
+    {
+      role: "user",
+      content: [
         {
-          role: "user",
-          content: [
-            {
-              type: "image_url",
-              image_url: `data:image/jpeg;base64,${imageBase64}`
-            },
-            {
-              type: "text",
-              text: "Look at the photo and generate 5 short captions with hashtags. One caption per line."
-            }
-          ]
+          type: "image_url",
+          image_url: {
+            url: `data:image/jpeg;base64,${imageBase64}`
+          }
+        },
+        {
+          type: "text",
+          text: "Look at the image and generate 5 short captions with hashtags. One caption per line."
         }
       ]
-    });
+    }
+  ]
+});
 
     let raw = response.choices?.[0]?.message?.content || "";
 
