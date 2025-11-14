@@ -1,12 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import OpenAI from "openai";
 
-export const config = {
-  api: {
-    bodyParser: false
-  }
-};
-
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
@@ -14,25 +8,14 @@ const client = new OpenAI({
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "https://postpoet.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") return res.status(200).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
   try {
-    // Read raw request body safely
-    const chunks: Buffer[] = [];
-    for await (const chunk of req) chunks.push(chunk);
-    const raw = Buffer.concat(chunks).toString();
+    const { imageBase64 } = req.body;
 
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
-      return res.status(400).json({ error: "Invalid JSON" });
-    }
-
-    const imageBase64 = parsed.imageBase64;
     if (!imageBase64) {
       return res.status(400).json({ error: "Missing imageBase64" });
     }
@@ -49,23 +32,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             },
             {
               type: "text",
-              text: "Generate 5 short captions with relevant hashtags. One caption per line."
+              text: "Generate 5 short social media captions with relevant hashtags. One caption per line. No quotes. No extra text."
             }
           ]
         }
       ]
     });
 
-    const rawText = response.choices?.[0]?.message?.content || "";
-    const captions = rawText
+    let raw = response.choices?.[0]?.message?.content || "";
+
+    // Remove wrapping quotes if model adds them
+    raw = raw.replace(/^"+|"+$/g, "").trim();
+
+    const captions = raw
       .split("\n")
-      .map(s => s.trim())
-      .filter(Boolean);
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
 
-    return res.status(200).json({ captions });
-
+    res.status(200).json({ captions });
+    
   } catch (err: any) {
-    console.error("PHOTO API ERROR:", err);
-    return res.status(500).json({ error: "Server error" });
+    console.error(err);
+    res.status(500).json({ error: err.message || "Server error" });
   }
 }
