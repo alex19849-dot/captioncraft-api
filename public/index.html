@@ -371,61 +371,95 @@ let uploadedPhotoBase64 = null;
     if (micBtn) micBtn.title = "Speech to text not supported in this browser";
   }
 
-  /* =============== GENERATE CAPTIONS =============== */
-  generateBtn.addEventListener("click", async () => {
-    const desc  = (descEl.value || "").trim();
-    const tone  = toneEl.value;
-    const style = (document.getElementById("style")?.value) || "medium";
+ /* =============== GENERATE CAPTIONS (TEXT + PHOTO COMBINED) =============== */
+generateBtn.addEventListener("click", async () => {
+  const desc  = (descEl.value || "").trim();
+  const tone  = toneEl.value;
+  const style = (document.getElementById("style")?.value) || "medium";
 
-    if (!desc) { alert("Write a quick description first."); return; }
-    if (!isPro && !canUse()) { alert("You’ve used your free captions today. Go Pro for unlimited."); return; }
+  // If NO photo and NO description, block
+  if (!uploadedPhotoBase64 && !desc) {
+    alert("Add a description or upload a photo first.");
+    return;
+  }
 
-    outputs.innerHTML = "<div class='out'>Thinking up captions…</div>";
+  // Free user check
+  if (!isPro && !canUse()) {
+    alert("You’ve used your free captions today. Go Pro for unlimited.");
+    return;
+  }
 
-    try {
-      const r = await fetch(GENERATE_URL, {
+  outputs.innerHTML = "<div class='out'>Generating your captions…</div>";
+
+  try {
+    let r;
+
+    // If a photo was uploaded, use PHOTO API
+    if (uploadedPhotoBase64) {
+      r = await fetch(PHOTO_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: uploadedPhotoBase64,
+          desc,
+          tone,
+          style,
+          email
+        })
+      });
+    } 
+    // Otherwise use TEXT API
+    else {
+      r = await fetch(GENERATE_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ desc, tone, style, email })
       });
-      if (!r.ok) {
-        const t = await r.text();
-        throw new Error(`API ${r.status}: ${t}`);
-      }
+    }
 
-      const { captions } = await r.json();
-      recordUse();
-      outputs.innerHTML = "";
+    if (!r.ok) {
+      const t = await r.text();
+      throw new Error(`API ${r.status}: ${t}`);
+    }
 
-      (captions || []).forEach(line => {
-  const pill = document.createElement("button");
-  pill.textContent = line;
-  pill.className   = "pillCopy";
-  pill.style.cssText = "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
-  pill.style.whiteSpace = "normal"; 
-  pill.style.wordBreak = "break-word";
+    const data = await r.json();
+    const captions = data.captions || [];
 
-  pill.addEventListener("click", () => {
-    navigator.clipboard.writeText(line);
-    pill.style.borderColor="#6ee7ff";
-    pill.style.background="#112030";
-    pill.textContent="Copied ✓";
-    setTimeout(()=>{ 
-      pill.textContent=line;
-      pill.style.borderColor="#2e364b"; 
-      pill.style.background="#181f2d"; 
-    }, 900);
-  });
+    outputs.innerHTML = "";
 
-  outputs.appendChild(pill);
+    captions.forEach(line => {
+      const pill = document.createElement("button");
+      pill.textContent = line;
+      pill.className   = "pillCopy";
+      pill.style.cssText =
+        "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
+      pill.style.whiteSpace = "normal";
+      pill.style.wordBreak = "break-word";
+
+      pill.addEventListener("click", () => {
+        navigator.clipboard.writeText(line);
+        pill.style.borderColor="#6ee7ff";
+        pill.style.background="#112030";
+        pill.textContent="Copied ✓";
+        setTimeout(() => {
+          pill.textContent=line;
+          pill.style.borderColor="#2e364b";
+          pill.style.background="#181f2d";
+        }, 900);
+      });
+
+      outputs.appendChild(pill);
+    });
+
+    if (!isPro) recordUse();
+
+  } catch (e) {
+    outputs.innerHTML =
+      `<div class="out" style="color:#ff6b6b">Error: ${e.message || "Request failed"}</div>`;
+    console.error(e);
+  }
 });
 
-
-    } catch (e) {
-      outputs.innerHTML = `<div class="out" style="color:#ff6b6b">Error: ${e.message || "Request failed"}</div>`;
-      console.error(e);
-    }
-  });
 
   /* =============== NAV =============== */
   if (goProBtn) goProBtn.addEventListener("click", () => { window.location.href = STRIPE_LINK; });
