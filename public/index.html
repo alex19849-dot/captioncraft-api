@@ -215,6 +215,7 @@ const CHECK_URL    = "https://postpoet-api.vercel.app/api/check";
   let isPro = false;
   let email = (localStorage.getItem("cc_email") || "").trim();
   let lastKnownPro = localStorage.getItem("lastKnownPro") === "true";
+let uploadedPhotoBase64 = null;
 
   const $             = (id) => document.getElementById(id);
   const limitInfo     = $("limitInfo");
@@ -469,56 +470,25 @@ if (photoBtn) {
   });
 }
 
-hiddenPhotoInput.addEventListener("change", async () => {
+hiddenPhotoInput.addEventListener("change", () => {
   const file = hiddenPhotoInput.files[0];
   if (!file) return;
 
   outputs.innerHTML = "<div class='out'>Reading your photo…</div>";
 
   const reader = new FileReader();
-  reader.onload = async () => {
-    const base64 = reader.result.split(",")[1];
+  reader.onload = () => {
+    uploadedPhotoBase64 = reader.result.split(",")[1];
 
-    outputs.innerHTML = "<div class='out'>Generating caption from your image…</div>";
+    outputs.innerHTML = `
+      <div class='out' style='color:#6ee7ff'>
+        Photo uploaded and ready. Pick tone and style, then hit Generate.
+      </div>`;
+  };
 
-    try {
-      const r = await fetch(PHOTO_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64: base64,
-          email
-        })
-      });
+  reader.readAsDataURL(file);
+});
 
-      const data = await r.json();
-
-      const captions = data.captions || [];
-      outputs.innerHTML = "";
-
-      captions.forEach(line => {
-        const pill = document.createElement("button");
-        pill.textContent = line;
-        pill.className   = "pillCopy";
-        pill.style.cssText =
-          "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
-        pill.style.whiteSpace = "normal";
-        pill.style.wordBreak = "break-word";
-
-        pill.addEventListener("click", () => {
-          navigator.clipboard.writeText(line);
-          pill.style.borderColor = "#6ee7ff";
-          pill.style.background = "#112030";
-          pill.textContent = "Copied ✅";
-          setTimeout(() => {
-            pill.textContent = line;
-            pill.style.borderColor = "#2e364b";
-            pill.style.background = "#181f2d";
-          }, 900);
-        });
-
-        outputs.appendChild(pill);
-      });
 
     } catch (err) {
       console.error(err);
