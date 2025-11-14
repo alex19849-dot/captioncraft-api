@@ -458,15 +458,20 @@ document.body.appendChild(hiddenPhotoInput);
 if (photoBtn) {
   photoBtn.addEventListener("click", () => {
 
-    // If not Pro, show Go Pro button the same way other features do
+    // If not Pro, block usage
     if (!isPro) {
       alert("Photo to Caption is a Pro feature. Unlock unlimited tools with Pro.");
       if (goProBtn) goProBtn.scrollIntoView({ behavior: "smooth" });
       return;
     }
 
-    // If Pro, open a hidden file input
-  hiddenPhotoInput.addEventListener("change", () => {
+    // Open file picker
+    hiddenPhotoInput.click();
+  });
+}
+
+// Handle selected photo
+hiddenPhotoInput.addEventListener("change", () => {
   const file = hiddenPhotoInput.files[0];
   if (!file) return;
 
@@ -484,8 +489,6 @@ if (photoBtn) {
 
   reader.readAsDataURL(file);
 });
-
-
 
 
   /* =============== BOOT =============== */
