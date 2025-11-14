@@ -435,12 +435,37 @@ const CHECK_URL    = "https://postpoet-api.vercel.app/api/check";
   if (closeContact) closeContact.addEventListener("click", () => {
     if (contactModal) contactModal.style.display = "none";
   });
-    const photoBtn = document.getElementById("photoBtn");
+   const photoBtn = document.getElementById("photoBtn");
+
 if (photoBtn) {
   photoBtn.addEventListener("click", () => {
-    alert("Photo to caption coming soon");
+
+    // If not Pro, show Go Pro button the same way other features do
+    if (!isPro) {
+      alert("Photo to Caption is a Pro feature. Unlock unlimited tools with Pro.");
+      if (goProBtn) goProBtn.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+
+    // If Pro, open a hidden file input
+    hiddenPhotoInput.click();
   });
 }
+
+// Create hidden input (not visible)
+const hiddenPhotoInput = document.createElement("input");
+hiddenPhotoInput.type = "file";
+hiddenPhotoInput.accept = "image/*";   // Allows JPEG, PNG, HEIC, WebP etc.
+hiddenPhotoInput.style.display = "none";
+
+document.body.appendChild(hiddenPhotoInput);
+
+// When user selects a file (Next step will process it)
+hiddenPhotoInput.addEventListener("change", () => {
+  outputs.innerHTML = "<div class='out'>Analyzing photo…</div>";
+  // Next step will handle sending file to backend
+});
+
 
 
   /* =============== BOOT =============== */
