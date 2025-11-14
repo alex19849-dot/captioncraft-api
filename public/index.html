@@ -466,11 +466,7 @@ if (photoBtn) {
     }
 
     // If Pro, open a hidden file input
-    hiddenPhotoInput.click();
-  });
-}
-
-hiddenPhotoInput.addEventListener("change", () => {
+  hiddenPhotoInput.addEventListener("change", () => {
   const file = hiddenPhotoInput.files[0];
   if (!file) return;
 
@@ -489,16 +485,6 @@ hiddenPhotoInput.addEventListener("change", () => {
   reader.readAsDataURL(file);
 });
 
-
-    } catch (err) {
-      console.error(err);
-      outputs.innerHTML =
-        `<div class='out' style='color:#ff6b6b'>Error generating caption</div>`;
-    }
-  };
-
-  reader.readAsDataURL(file);
-});
 
 
 
