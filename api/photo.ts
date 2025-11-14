@@ -1,28 +1,33 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import OpenAI from "openai";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "https://postpoet.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "POST only" });
+  }
 
   try {
-    // Vercel auto-parses multipart form-data into req.body as Buffers
-    const file = req.body?.image;
+    // Read JSON body (your frontend sends JSON)
+    const body = await req.json();
+    const { imageBase64, email } = body;
 
-    if (!file) {
-      return res.status(400).json({ error: "No file received" });
+    if (!imageBase64) {
+      return res.status(400).json({ error: "Missing imageBase64" });
     }
 
-    // Convert buffer to base64
-    const imageBase64 = Buffer.from(file).toString("base64");
-
-    // --- OpenAI Vision ---
+    // OpenAI Vision request using image_url
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -35,7 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             },
             {
               type: "text",
-              text: "Generate 5 short captions with hashtags. One caption per line."
+              text: "Look at this image and generate 5 short captions with relevant hashtags. Put each caption on its own line."
             }
           ]
         }
@@ -45,15 +50,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let raw = response.choices?.[0]?.message?.content || "";
     raw = raw.replace(/^"+|"+$/g, "").trim();
 
+    // Split into multiple captions
     const captions = raw
       .split("\n")
-      .map(x => x.trim())
-      .filter(x => x.length > 0);
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
 
-    res.status(200).json({ captions });
+    return res.status(200).json({ captions });
 
   } catch (err: any) {
-    console.error(err);
-    res.status(500).json({ error: err.message || "Server error" });
+    console.error("PHOTO API ERROR:", err);
+    return res.status(500).json({
+      error: err.message || "Server error"
+    });
   }
 }
