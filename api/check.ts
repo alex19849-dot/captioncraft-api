@@ -1,41 +1,35 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { Redis } from "@upstash/redis";
 
-// Reads "pro" using Upstash REST. No @upstash/redis package needed.
-  export default async function handler(req: VercelRequest, res: VercelResponse) {
-   res.setHeader("Access-Control-Allow-Origin", "https://postpoet.vercel.app");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!
+});
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  res.setHeader("Access-Control-Allow-Origin", "https://postpoet.vercel.app");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
+
   try {
-  const email = (req.query.email as string) || "";
-  if (!email) return res.status(400).json({ pro: false, error: "email required" });
+    const email = (req.query.email as string || "").trim().toLowerCase();
 
-  try {
-    // We’re checking set membership: SISMEMBER pro_users <email>
-    const url = `${process.env.UPSTASH_REDIS_REST_URL}/sismember/pro_users/${encodeURIComponent(email)}`;
-    const r = await fetch(url, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}` }
-    });
-
-    if (!r.ok) {
-      const txt = await r.text();
-      throw new Error(`Upstash REST ${r.status}: ${txt}`);
+    if (!email) {
+      return res.status(400).json({ error: "Missing email" });
     }
 
-    // Upstash REST returns JSON like: { result: 1 } or { result: 0 }
-    const data = await r.json();
-    const result = data?.result;
+    const pro = await redis.get(`pro:${email}`);
 
-    const isPro =
-      result === 1 || result === "1" || result === true || result === "true";
+    return res.status(200).json({
+      email,
+      pro: !!pro
+    });
 
-    return res.json({ pro: !!isPro });
   } catch (err: any) {
-    console.error("CHECK REST ERROR:", err?.message || err);
-    return res.status(500).json({ pro: false, error: "redis rest failed" });
+    console.error("CHECK API ERROR:", err);
+    return res.status(500).json({ error: err.message || "Server error" });
   }
 }
