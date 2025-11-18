@@ -11,8 +11,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "POST only" });
+  }
 
   try {
     const { imageBase64, tone, style, desc } = (req.body || {}) as {
@@ -22,49 +27,67 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       desc?: string;
     };
 
-    if (!imageBase64) {
+    if (!imageBase64 || typeof imageBase64 !== "string") {
       return res.status(400).json({ error: "Missing imageBase64" });
     }
 
-    const toneValue  = (tone  && tone.trim())  || "Product selling direct";
-    const styleValue = (style && style.trim()) || "medium";
-    const descValue  = (desc  && desc.trim())  || "";
+    const toneValueRaw  = (tone  || "").trim();
+    const styleValueRaw = (style || "").trim();
+
+    const toneValue =
+      toneValueRaw ||
+      "Product selling direct";
+
+    // normalise style
+    const styleKey = styleValueRaw.toLowerCase();
+    let styleValue: "short" | "medium" | "long";
+    if (styleKey.includes("short")) {
+      styleValue = "short";
+    } else if (styleKey.includes("long") || styleKey.includes("story")) {
+      styleValue = "long";
+    } else {
+      styleValue = "medium";
+    }
+
+    const descValue = (desc || "").trim();
 
     const prompt = `
-You are PostPoet, an AI caption writer.
+You are PostPoet, an AI caption writer for social content.
 
-The user uploaded a product or lifestyle photo.
+The user has uploaded a product or lifestyle photo.
 
-Extra context from user: "${descValue}"
+Additional context from the user (optional): "${descValue}"
 
 Tone: ${toneValue}
-Style: ${styleValue}
+Style bucket: ${styleValue}
 
-Rules:
-- Produce exactly 5 captions.
-- One caption per line.
-- Include 3 to 7 relevant hashtags.
+Follow these rules strictly:
+- Write 5 different captions, one per line.
+- Make them suitable for social media (Instagram, TikTok, Vinted, Depop, eBay).
+- Use the image plus the extra description together when relevant.
+- Always include 3 to 7 relevant hashtags per caption.
+- Use the tone above in the wording (for example: "Product selling direct" should feel sales focused but not scammy).
 - Length rules:
-  • short: 80–120 chars
-  • medium: 120–250 chars
-  • long: 320–550 chars
-- No meta commentary.
-- No numbering, bullets, labels or headings.
-- Only output the 5 captions, nothing else.
-    `.trim();
+  • If style is "short": caption must be between 80 and 120 characters.
+  • If style is "medium": caption must be between 120 and 250 characters.
+  • If style is "long": caption must be between 320 and 550 characters.
+- Do not go above or below the required range for that style.
+- Do NOT mention "tone", "style", "PostPoet" or describe what you are doing.
+- Do NOT output headings, labels, markdown, bullet points or numbering.
+- Output ONLY the 5 captions, each on its own line, nothing else.
+`;
 
-    // NEW RESPONSES API (image goes into input_image)
-    const response = await client.responses.create({
-      model: "gpt-4.1",
-      input: [
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      temperature: 0.85,
+      messages: [
         {
           role: "user",
           content: [
             {
-              type: "input_image",
-              image: {
-                data: imageBase64,
-                format: "jpeg"
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${imageBase64}`
               }
             },
             {
@@ -76,8 +99,23 @@ Rules:
       ]
     });
 
-    // Extract text
-    let raw = response.output_text || "";
+    let raw = completion.choices?.[0]?.message?.content;
+
+    // In case content is not a plain string (future proofing)
+    if (Array.isArray(raw)) {
+      raw = raw
+        .map((part: any) => {
+          if (typeof part === "string") return part;
+          if (part.type === "text") return part.text || "";
+          return "";
+        })
+        .join("\n");
+    }
+
+    if (typeof raw !== "string") {
+      raw = String(raw ?? "");
+    }
+
     raw = raw.replace(/^"+|"+$/g, "").trim();
 
     const captions = raw
