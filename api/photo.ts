@@ -11,93 +11,71 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "POST only" });
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
   try {
-    const { imageBase64, email, tone, style } = (req.body || {}) as {
+    const { imageBase64, tone, style, desc } = (req.body || {}) as {
       imageBase64?: string;
-      email?: string;
       tone?: string;
       style?: string;
+      desc?: string;
     };
 
-    if (!imageBase64 || typeof imageBase64 !== "string") {
+    if (!imageBase64) {
       return res.status(400).json({ error: "Missing imageBase64" });
     }
 
     const toneValue  = (tone  && tone.trim())  || "Product selling direct";
     const styleValue = (style && style.trim()) || "medium";
-const descValue = (req.body?.desc || "").trim();
+    const descValue  = (desc  && desc.trim())  || "";
 
     const prompt = `
-const prompt = `
-You are PostPoet, an AI caption writer for social content.
+You are PostPoet, an AI caption writer for social media.
 
 The user has uploaded a product or lifestyle photo.
-
-Additional context from the user: "${descValue}"
+Additional user description: "${descValue}"
 
 Tone: ${toneValue}
 Style: ${styleValue}
 
-Follow these rules strictly:
-- Write 5 different captions, one per line.
-- Make them suitable for social media (Instagram, TikTok, Vinted, Depop, eBay).
-- Always include 3 to 7 relevant hashtags per caption.
-- Use the tone above in the wording (for example: "Product selling direct" should feel sales focused but not scammy).
-- Length must follow these exact rules:
-  • If style is "short" or "Punchy Short": caption must be between 80 and 120 characters.
-  • If style is "medium" or "Normal Caption": caption must be between 120 and 250 characters.
-  • If style is "long" or "Story Mode": caption must be between 320 and 550 characters.
-- Do not go above or below the required range.
-- Do NOT mention "tone", "style", "PostPoet" or describe what you are doing.
-- Do NOT output headings, labels, markdown, bullet points or numbering.
-- Output ONLY the 5 captions, each on its own line, nothing else.
+Follow these strict rules:
+- Produce exactly 5 captions.
+- One caption per line, no numbering, no bullets.
+- Must include 3 to 7 hashtags that match the photo context.
+- Follow style lengths:
+  • short / Punchy Short: 80 to 120 characters
+  • medium / Normal Caption: 120 to 250 characters
+  • long / Story Mode: 320 to 550 characters
+- Do NOT mention tone, style, or PostPoet.
+- Do NOT explain yourself.
+- Output only the 5 captions.
 `;
 
- const response = await client.responses.create({
-  model: "gpt-4.1",
-  input: [
-    {
-      role: "user",
-      content: [
+    const response = await client.responses.create({
+      model: "gpt-4.1",
+      input: [
         {
-          type: "input_image",
-          image: {
-            format: "jpeg",
-            data: imageBase64
-          }
-        },
-        {
-          type: "text",
-          text: prompt
+          role: "user",
+          content: [
+            {
+              type: "input_image",
+              image: {
+                format: "jpeg",
+                data: imageBase64
+              }
+            },
+            {
+              type: "text",
+              text: prompt
+            }
+          ]
         }
       ]
-    }
-  ]
-});
+    });
 
-// Extract text correctly
-let raw = response.output_text || "";
-raw = raw.replace(/^"+|"+$/g, "").trim();
-
-const captions = raw
-  .split("\n")
-  .map(line => line.trim())
-  .filter(line => line.length > 0);
-
-
-    let raw = response.choices?.[0]?.message?.content || "";
-
-    if (typeof raw !== "string") {
-      raw = String(raw ?? "");
-    }
+    // The new API returns text here:
+    let raw = response.output_text ?? "";
 
     raw = raw.replace(/^"+|"+$/g, "").trim();
 
