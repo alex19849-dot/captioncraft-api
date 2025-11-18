@@ -51,31 +51,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const descValue = (desc || "").trim();
 
-    const prompt = `
-You are PostPoet, an AI caption writer for social content.
+   const basePrompt = `
+You are PostPoet, writing Urban Creator Street Smart social captions.
+Principles: confident, clean, premium, culturally aware. PG-13 only. No explicit sexual content.
 
-The user has uploaded a product or lifestyle photo.
+The user has uploaded a product or lifestyle image. Use the visual details *plus* any provided description to understand context and purpose.
 
-Additional context from the user (optional): "${descValue}"
+Write ${styleValue} captions in "${toneValue}" tone for what you see in the image.
 
-Tone: ${toneValue}
-Style bucket: ${styleValue}
+Target length: between ${t.min} and ${t.max} characters per caption, natural and not padded.
 
-Follow these rules strictly:
-- Write 5 different captions, one per line.
-- Make them suitable for social media (Instagram, TikTok, Vinted, Depop, eBay).
-- Use the image plus the extra description together when relevant.
-- Always include 3 to 7 relevant hashtags per caption.
-- Use the tone above in the wording (for example: "Product selling direct" should feel sales focused but not scammy).
-- Length rules:
-  • If style is "short": aim for around 120 characters (give or take).
-  • If style is "medium": aim for around 250 characters (give or take).
-  • If style is "long": aim for around 500 characters (give or take).
-- Do not go above or below the required range for that style.
-- Do NOT mention "tone", "style", "PostPoet" or describe what you are doing.
-- Do NOT output headings, labels, markdown, bullet points or numbering.
-- Output ONLY the 5 captions, each on its own line, nothing else.
+Each caption must:
+- Be one paragraph
+- Contain NO numbering
+- Contain NO quote marks
+- Avoid emojis unless the tone strongly justifies them
+- Append relevant niche + broad SEO hashtags (NOT generic spam like #love #instagood unless truly relevant)
+- Include between ${t.hashtagMin} and ${t.hashtagMax} hashtags
+- Use hashtags in the same paragraph, not on separate lines
+- Return exactly 5 distinct captions, each on its own line
+
+Tone rules:
 `;
+
+let toneAddOn = "";
+
+if (toneValue.toLowerCase() === "product selling direct") {
+  toneAddOn = `
+For THIS tone ONLY:
+Lean into conversion with value, emotional desire and cultural flex.
+Light, permission-based CTA allowed ("tap to look", "worth a closer look").
+No hard sell, no price listing, no needy language.
+Focus on how the product changes the user's lived experience, not on features.
+Story Mode should still move toward the CTA outcome.
+`;
+} else if (lifestyleTones.includes(toneValue.toLowerCase())) {
+  toneAddOn = `
+For lifestyle tones:
+The first sentence MUST be a memeable hook or punchline, something instantly screenshotable and shareable.
+It must NOT start or end with quotes.
+Still PG-13. No CTA unless the tone explicitly encourages one.
+`;
+}
+
+const finalPrompt = `
+${basePrompt}
+${toneAddOn}
+
+User extra description: "${descValue}"
+
+Remember: Only output the 5 captions. No explanations. No meta comments.
+`.trim();
 
     const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
