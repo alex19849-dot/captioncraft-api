@@ -6,6 +6,7 @@ const client = new OpenAI({
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS
   res.setHeader("Access-Control-Allow-Origin", "https://postpoet.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -30,10 +31,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const descValue  = (desc  && desc.trim())  || "";
 
     const prompt = `
-You are PostPoet, an AI caption writer for social media.
+You are PostPoet, an AI caption writer.
 
 The user uploaded a product or lifestyle photo.
-Extra description from user: "${descValue}"
+
+Extra context from user: "${descValue}"
 
 Tone: ${toneValue}
 Style: ${styleValue}
@@ -42,15 +44,16 @@ Rules:
 - Produce exactly 5 captions.
 - One caption per line.
 - Include 3 to 7 relevant hashtags.
-- Style rules:
+- Length rules:
   • short: 80–120 chars
   • medium: 120–250 chars
   • long: 320–550 chars
 - No meta commentary.
-- No labels or numbering.
-- Only output the 5 captions.
-`.
+- No numbering, bullets, labels or headings.
+- Only output the 5 captions, nothing else.
+    `.trim();
 
+    // NEW RESPONSES API (image goes into input_image)
     const response = await client.responses.create({
       model: "gpt-4.1",
       input: [
@@ -59,7 +62,10 @@ Rules:
           content: [
             {
               type: "input_image",
-              image_url: `data:image/jpeg;base64,${imageBase64}`
+              image: {
+                data: imageBase64,
+                format: "jpeg"
+              }
             },
             {
               type: "text",
@@ -70,6 +76,7 @@ Rules:
       ]
     });
 
+    // Extract text
     let raw = response.output_text || "";
     raw = raw.replace(/^"+|"+$/g, "").trim();
 
