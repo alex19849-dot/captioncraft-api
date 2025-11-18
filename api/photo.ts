@@ -13,9 +13,9 @@ const STYLE_META = {
 } as const;
 
 const LIFESTYLE_TONES = [
-  "british witty",
-  "american bold",
-  "australian laid-back",
+  "witty",
+  "bold",
+  "laid-back",
   "flirty",
   "sarcastic",
   "luxury",
