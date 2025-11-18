@@ -36,13 +36,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 const descValue = (req.body?.desc || "").trim();
 
     const prompt = `
+const prompt = `
 You are PostPoet, an AI caption writer for social content.
 
 The user has uploaded a product or lifestyle photo.
 
+Additional context from the user: "${descValue}"
+
 Tone: ${toneValue}
 Style: ${styleValue}
-User Description: ${descValue}
 
 Follow these rules strictly:
 - Write 5 different captions, one per line.
