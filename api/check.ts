@@ -16,16 +16,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const email = (req.query.email as string || "").trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: "Missing email" });
 
-    if (!email) {
-      return res.status(400).json({ error: "Missing email" });
-    }
-
-    const pro = await redis.get(`pro:${email}`);
+    // MATCH WHAT WEBHOOK SAVES
+    const isMember = await redis.sismember("pro_users", email);
 
     return res.status(200).json({
       email,
-      pro: !!pro
+      pro: !!isMember
     });
 
   } catch (err: any) {
