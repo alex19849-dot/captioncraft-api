@@ -5,14 +5,40 @@ const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
 
+// Style meta, similar to your text endpoint
+const STYLE_META = {
+  short:  { min: 80,  max: 140, hashtagMin: 3, hashtagMax: 7 },
+  medium: { min: 140, max: 260, hashtagMin: 3, hashtagMax: 7 },
+  long:   { min: 260, max: 550, hashtagMin: 3, hashtagMax: 7 }
+} as const;
+
+const LIFESTYLE_TONES = [
+  "british witty",
+  "american bold",
+  "australian laid-back",
+  "flirty",
+  "sarcastic",
+  "luxury",
+  "motivational",
+  "empathetic supportive",
+  "melancholic reflective",
+  "dark humour",
+  "savage roast"
+];
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "https://postpoet.vercel.app");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "POST only" });
+  }
 
   try {
     const { imageBase64, tone, style, desc } = (req.body || {}) as {
@@ -26,12 +52,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Missing imageBase64" });
     }
 
-    // Normalise tone
-    const toneValueRaw = (tone || "").trim();
-    const toneValue = toneValueRaw || "Product selling direct";
+    const toneRaw  = (tone  || "").trim();
+    const styleRaw = (style || "").trim();
+    const descValue = (desc || "").trim();
+
+    const toneValue =
+      toneRaw ||
+      "Product selling direct";
 
     // Normalise style
-    const styleKey = (style || "").trim().toLowerCase();
+    const styleKey = styleRaw.toLowerCase();
     let styleValue: "short" | "medium" | "long";
     if (styleKey.includes("short")) {
       styleValue = "short";
@@ -41,86 +71,66 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       styleValue = "medium";
     }
 
-    const descValue = (desc || "").trim();
+    const t = STYLE_META[styleValue];
 
-    // Length + hashtag rules
-    const config = {
-      short: { min: 80, max: 140, hashtagMin: 3, hashtagMax: 7 },
-      medium: { min: 140, max: 260, hashtagMin: 3, hashtagMax: 7 },
-      long: { min: 320, max: 550, hashtagMin: 4, hashtagMax: 8 }
-    }[styleValue];
-
-    // Lifestyle tones
-    const lifestyleTones = [
-      "british witty",
-      "american bold",
-      "australian laid-back",
-      "flirty",
-      "sarcastic",
-      "luxury",
-      "motivational",
-      "empathetic supportive",
-      "melancholic reflective",
-      "dark humour",
-      "savage roast"
-    ];
-
+    // Base behaviour copied from your text prompt, but for image + desc
     const basePrompt = `
 You are PostPoet, writing Urban Creator Street Smart social captions.
-Principles: confident, clean, premium, culturally aware. PG-13 only.
+Principles: confident, clean, premium, culturally aware. PG-13 only. No explicit sexual content.
 
-The user has uploaded a product or lifestyle image. Combine the visual information with the description.
+The user has uploaded a product or lifestyle photo.
+Use what you see in the image AND the extra description below to understand context and purpose.
+
+Extra description (may be empty): "${descValue}"
 
 Write ${styleValue} captions in "${toneValue}" tone.
 
-Target length: ${config.min} to ${config.max} characters, natural, not padded.
+Target length: between ${t.min} and ${t.max} characters per caption, natural not padded.
+Each caption must be one paragraph, no numbering, no quote marks.
+Avoid emojis unless the tone clearly justifies them.
 
 Each caption must:
-- Be one paragraph
-- No numbering
-- No quote marks
-- No emojis unless the tone requires it
-- Append ${config.hashtagMin}-${config.hashtagMax} relevant hashtags (mix niche and broad)
-- Hashtags must be in the same paragraph
-- Return exactly 5 captions, each on its own line
-`;
+- Include its own hashtags at the end (same paragraph)
+- Use between ${t.hashtagMin} and ${t.hashtagMax} relevant hashtags
+- Mix niche + broader SEO-friendly hashtags
+- Be suitable for Instagram, TikTok, Vinted, Depop, eBay style feeds.
+
+Return exactly 5 distinct captions.
+Each caption on its own line.
+Do NOT output headings, labels, bullets or numbering.
+Do NOT mention tone, style or PostPoet.
+`.trim();
 
     let toneAddOn = "";
 
-    // Product selling direct tone
     if (toneValue.toLowerCase() === "product selling direct") {
       toneAddOn = `
-For Product Selling Direct:
-- Light CTA allowed ("tap to look", "worth a closer look")
-- No hard sell
-- No price lists
-- Focus on lifestyle transformation, not features
-- Story Mode must still lean toward the CTA outcome
-`;
-    }
-
-    // Lifestyle tones
-    if (lifestyleTones.includes(toneValue.toLowerCase())) {
+For THIS tone ONLY:
+- Lean into conversion through value, emotional desire and cultural flex.
+- Light permission-based CTA allowed ("tap to see more", "worth a closer look").
+- No aggressive sales talk, no price spam, no desperate language.
+- Focus on how the product changes the user's lived experience, not just listing features.
+`.trim();
+    } else if (LIFESTYLE_TONES.includes(toneValue.toLowerCase())) {
       toneAddOn = `
 For lifestyle tones:
-- First sentence MUST be a memeable hook or punchline
-- No quotes around the hook
-- Must feel viral, screenshot-worthy
-`;
+- First sentence should be a hook or punchline that feels screenshotable and shareable.
+- Must NOT start or end with quotes.
+- Keep it PG-13. No explicit content.
+`.trim();
     }
 
     const finalPrompt = `
 ${basePrompt}
+
 ${toneAddOn}
 
-Extra description from user: "${descValue}"
-
-Output ONLY the 5 captions, nothing else.
+Remember:
+Only output the 5 captions, one per line. No explanations or meta commentary.
 `.trim();
 
-    // === OpenAI Call (4o-mini vision) ===
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       temperature: 0.9,
       messages: [
         {
@@ -141,15 +151,18 @@ Output ONLY the 5 captions, nothing else.
       ]
     });
 
-    // Extract
     let raw = completion.choices?.[0]?.message?.content || "";
+
+    if (typeof raw !== "string") {
+      raw = String(raw ?? "");
+    }
 
     raw = raw.replace(/^"+|"+$/g, "").trim();
 
     const captions = raw
       .split("\n")
-      .map(x => x.trim())
-      .filter(x => x.length > 0);
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
 
     if (!captions.length) {
       return res.status(500).json({ error: "No captions generated" });
