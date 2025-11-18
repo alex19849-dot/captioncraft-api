@@ -61,26 +61,28 @@ Follow these rules strictly:
 - Output ONLY the 5 captions, each on its own line, nothing else.
 `;
 
-    const response = await client.chat.completions.create({
-      model: "gpt-4.1",
-      messages: [
+   const response = await client.responses.create({
+  model: "gpt-4.1",
+  input: [
+    {
+      role: "user",
+      content: [
         {
-          role: "user",
-          content: [
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${imageBase64}`
-              }
-            },
-            {
-              type: "text",
-              text: prompt
-            }
-          ]
+          type: "input_image",
+          image: {
+            format: "jpeg",
+            data: imageBase64
+          }
+        },
+        {
+          type: "text",
+          text: prompt
         }
       ]
-    });
+    }
+  ]
+});
+
 
     let raw = response.choices?.[0]?.message?.content || "";
 
