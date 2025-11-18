@@ -7,7 +7,7 @@
   },
   "dependencies": {
   "stripe": "^14.0.0",
-  "openai": "^4.55.0",
+  "openai": "4.56.0",
   "@upstash/redis": "^1.32.0"
 },
   "devDependencies": {
