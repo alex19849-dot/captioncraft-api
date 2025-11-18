@@ -61,7 +61,7 @@ Follow these rules strictly:
 - Output ONLY the 5 captions, each on its own line, nothing else.
 `;
 
-   const response = await client.responses.create({
+ const response = await client.responses.create({
   model: "gpt-4.1",
   input: [
     {
@@ -82,6 +82,15 @@ Follow these rules strictly:
     }
   ]
 });
+
+// Extract text correctly
+let raw = response.output_text || "";
+raw = raw.replace(/^"+|"+$/g, "").trim();
+
+const captions = raw
+  .split("\n")
+  .map(line => line.trim())
+  .filter(line => line.length > 0);
 
 
     let raw = response.choices?.[0]?.message?.content || "";
