@@ -51,10 +51,11 @@ Follow these rules strictly:
 - Make them suitable for social media (Instagram, TikTok, Vinted, Depop, eBay).
 - Always include 3 to 7 relevant hashtags per caption.
 - Use the tone above in the wording (for example: "Product selling direct" should feel sales focused but not scammy).
-- Use the style above for length:
-  • "short" or "Punchy Short": around 80–120 characters, tight hooky, still with hashtags.
-  • "medium" or "Normal Caption": around 120–250 characters.
-  • "long" or "Story Mode": around 320–550 characters, more narrative.
+- Length must follow these exact rules:
+  • If style is "short" or "Punchy Short": caption must be between 80 and 120 characters.
+  • If style is "medium" or "Normal Caption": caption must be between 120 and 250 characters.
+  • If style is "long" or "Story Mode": caption must be between 320 and 550 characters.
+- Do not go above or below the required range.
 - Do NOT mention "tone", "style", "PostPoet" or describe what you are doing.
 - Do NOT output headings, labels, markdown, bullet points or numbering.
 - Output ONLY the 5 captions, each on its own line, nothing else.
