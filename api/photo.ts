@@ -68,9 +68,9 @@ Follow these rules strictly:
 - Always include 3 to 7 relevant hashtags per caption.
 - Use the tone above in the wording (for example: "Product selling direct" should feel sales focused but not scammy).
 - Length rules:
-  • If style is "short": caption must be between 80 and 120 characters.
-  • If style is "medium": caption must be between 120 and 250 characters.
-  • If style is "long": caption must be between 320 and 550 characters.
+  • If style is "short": aim for around 120 characters (give or take).
+  • If style is "medium": aim for around 250 characters (give or take).
+  • If style is "long": aim for around 500 characters (give or take).
 - Do not go above or below the required range for that style.
 - Do NOT mention "tone", "style", "PostPoet" or describe what you are doing.
 - Do NOT output headings, labels, markdown, bullet points or numbering.
