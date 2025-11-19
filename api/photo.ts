@@ -115,6 +115,7 @@ Special tone behaviour:
 Return ONLY the 5 final captions. Nothing before or after.
 
 `.trim();
+const finalPrompt = basePrompt;
 
     const completion = await client.chat.completions.create({
       model: "gpt-4o",
