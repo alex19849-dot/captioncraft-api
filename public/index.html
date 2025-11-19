@@ -205,7 +205,7 @@ style="margin-top:10px;width:100%;padding:10px;border-radius:10px;border:1px sol
   "use strict";
 
   /* =============== CONFIG =============== */
-  const DAILY_LIMIT  = 10; // shared pool: mic + text
+  const DAILY_LIMIT  = 5; // shared pool: mic + text
   const GENERATE_URL = "https://postpoet-api.vercel.app/api/generate";
 const CHECK_URL    = "https://postpoet-api.vercel.app/api/check";
   const STRIPE_LINK  = "https://buy.stripe.com/5kQ4gyeFb5B4bZDb118Zq00";
@@ -275,7 +275,7 @@ let uploadedPhotoBase64 = null;
     if (logoutLink) logoutLink.style.display = email ? "inline" : "none";
     if (proNote) {
       proNote.style.display = isPro ? "none" : "block";
-      proNote.textContent = "Mic and captions share 10 free uses per day. Pro unlocks unlimited.";
+      proNote.textContent = "Mic and captions share 5 free uses per day. Pro unlocks unlimited.";
     }
   }
 
