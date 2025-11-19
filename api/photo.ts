@@ -82,6 +82,9 @@ You are generating captions based on:
 1. What you SEE in the uploaded image
 2. Extra user description: "${descValue}"
 Blend both naturally.
+Combine the visual info from the image with this user description naturally:
+"${descValue}"
+The description MUST influence the caption. Do not ignore it.
 
 Tone: ${toneValue}
 Length style: ${styleValue}
@@ -95,10 +98,13 @@ Rules:
 - Hashtags must be specific, niche + broad mixed, and match the image, the vibe and the tone.
 - Hashtags MUST be in the same paragraph, not on a new line.
 
-Length rules (must feel natural, not padded):
-- If style is "short": keep MOST captions *around 80–120 chars*.
-- If style is "medium": keep MOST captions *around 120–250 chars*.
-- If style is "long": keep MOST captions *around 320–550 chars* but not filler. Story-driven, emotional, or aesthetic narrative.
+Length rules (STRICT):
+For each caption:
+- If style is "short", caption MUST be between 100 and 120 characters.
+- If style is "medium", caption MUST be between 200 and 250 characters.
+- If style is "long", caption MUST be between 350 and 500 characters.
+Do NOT write outside these ranges. Do NOT pad artificially.
+
 
 Special tone behaviour:
 • Product Selling Direct:
@@ -118,7 +124,7 @@ Return ONLY the 5 final captions. Nothing before or after.
 const finalPrompt = basePrompt;
 
     const completion = await client.chat.completions.create({
-      model: "gpt-4o",
+     model: "gpt-4o-mini",
       temperature: 0.9,
       messages: [
         {
