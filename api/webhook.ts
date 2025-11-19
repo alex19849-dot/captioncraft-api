@@ -15,6 +15,12 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
+/** ADD BOTH VALID PRO PRICE IDs HERE **/
+const VALID_PRO_PRICES = new Set([
+  "price_1SV9coBRVzTxNP7xWXcnOyEW", // £6.99 new price
+  "price_1SQTpSBRVzTxNP7xMIUI4f6Z"       // <- replace with your old £4.99 price ID
+]);
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
 
@@ -43,58 +49,53 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     switch (event.type) {
 
       case "checkout.session.completed": {
-        console.log("### CHECKOUT SESSION EVENT RAW ###");
-        console.log(JSON.stringify(event.data.object, null, 2));
-
         const session: any = event.data.object;
 
-        let email = session?.customer_details?.email || null;
+        const priceId = session?.line_items?.data?.[0]?.price?.id 
+                      || session?.metadata?.price_id 
+                      || null;
 
-        if (!email && session.customer) {
-          const cust: any = await stripe.customers.retrieve(session.customer);
-          email = cust?.email || null;
+        const customerEmail =
+          session?.customer_details?.email ||
+          (session.customer && (await stripe.customers.retrieve(session.customer))?.email) ||
+          null;
+
+        if (customerEmail && priceId && VALID_PRO_PRICES.has(priceId)) {
+          await redis.sadd("pro_users", customerEmail.toLowerCase());
+          console.log("✅ PRO ADDED:", customerEmail, "via", priceId);
         }
-
-        console.log("CHECKOUT EVENT EMAIL:", email);
-
-        if (email) {
-          await redis.sadd("pro_users", email);
-          console.log("✅ PRO USER SAVED", email);
-        }
-
         break;
       }
 
       case "invoice.payment_succeeded": {
-        console.log("### invoice.payment_succeeded ###");
-
         const invoice: any = event.data.object;
-        const cust: any = await stripe.customers.retrieve(invoice.customer);
-        const email = cust?.email || null;
 
-        if (email) {
-          await redis.sadd("pro_users", email);
-          console.log("✅ PRO USER RENEWED", email);
+        const priceId = invoice?.lines?.data?.[0]?.price?.id;
+        const customer = await stripe.customers.retrieve(invoice.customer);
+        const email = (customer as any)?.email || null;
+
+        if (email && priceId && VALID_PRO_PRICES.has(priceId)) {
+          await redis.sadd("pro_users", email.toLowerCase());
+          console.log("🔁 PRO RENEWED:", email, "via", priceId);
         }
         break;
       }
 
-      case "customer.subscription.deleted":
-      {
-        console.log("### customer.subscription.deleted ###");
+      case "customer.subscription.deleted": {
         const sub: any = event.data.object;
-        const cust: any = await stripe.customers.retrieve(sub.customer);
-        const email = cust?.email || null;
+
+        const customer = await stripe.customers.retrieve(sub.customer);
+        const email = (customer as any)?.email || null;
 
         if (email) {
-          await redis.srem("pro_users", email);
-          console.log("🧹 PRO USER REMOVED", email);
+          await redis.srem("pro_users", email.toLowerCase());
+          console.log("🧹 PRO REMOVED:", email);
         }
         break;
       }
 
       default:
-        console.log("UNHANDLED EVENT:", event.type);
+        console.log("Unhandled event:", event.type);
     }
 
   } catch (err: any) {
