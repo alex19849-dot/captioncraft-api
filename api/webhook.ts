@@ -55,10 +55,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                       || session?.metadata?.price_id 
                       || null;
 
-        const customerEmail =
-          session?.customer_details?.email ||
-          (session.customer && (await stripe.customers.retrieve(session.customer))?.email) ||
-          null;
+        let customerEmail = session?.customer_details?.email || null;
+
+if (!customerEmail && session.customer) {
+  const cust = await stripe.customers.retrieve(session.customer);
+  customerEmail = (cust as any).data?.email || null;
+}
+
 
         if (customerEmail && priceId && VALID_PRO_PRICES.has(priceId)) {
           await redis.sadd("pro_users", customerEmail.toLowerCase());
@@ -71,8 +74,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const invoice: any = event.data.object;
 
         const priceId = invoice?.lines?.data?.[0]?.price?.id;
-        const customer = await stripe.customers.retrieve(invoice.customer);
-        const email = (customer as any)?.email || null;
+       const cust = await stripe.customers.retrieve(invoice.customer);
+const email = (cust as any).data?.email || null;
 
         if (email && priceId && VALID_PRO_PRICES.has(priceId)) {
           await redis.sadd("pro_users", email.toLowerCase());
@@ -84,8 +87,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case "customer.subscription.deleted": {
         const sub: any = event.data.object;
 
-        const customer = await stripe.customers.retrieve(sub.customer);
-        const email = (customer as any)?.email || null;
+      const cust = await stripe.customers.retrieve(sub.customer);
+const email = (cust as any).data?.email || null;
 
         if (email) {
           await redis.srem("pro_users", email.toLowerCase());
