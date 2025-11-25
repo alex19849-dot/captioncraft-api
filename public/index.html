@@ -542,5 +542,10 @@ hiddenPhotoInput.addEventListener("change", () => {
 
   document.addEventListener("visibilitychange", ()=>{ if (document.visibilityState === "visible") refreshProStatus(); });
   </script>
+  <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
+</script>
 </body>
 </html>
