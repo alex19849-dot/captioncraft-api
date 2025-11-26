@@ -96,7 +96,7 @@
       #outputs{ margin-top:14px; gap:8px; }
       footer{ margin-top:26px; font-size:11px; }
     }
-    /* HOME ICON BUTTON */
+ /* HOME BUTTON FIXED TOP-LEFT */
 .home-btn {
   position: fixed;
   top: 15px;
@@ -105,23 +105,27 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: #0f1115;
-  border: 1px solid #2f3852;
-  text-decoration: none;
+  width: 28px;
+  height: 28px;
+  background: none; 
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
 }
 
+/* tiny, clean, blue house icon */
 .home-btn svg {
   width: 22px;
   height: 22px;
-  fill: #67d8f4; /* your brand blue */
+  fill: #67d8f4; 
 }
 
+/* hover effect */
 .home-btn:hover svg {
-  fill: #54c7e2; /* hover colour */
+  fill: #54c7e2;
 }
+
   </style>
   <link rel="manifest" href="/manifest.json">
 </head>
