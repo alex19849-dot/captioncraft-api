@@ -1,50 +1,86 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>About PostPoet</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#0f1115;color:#e8ecf1;font-family:system-ui,sans-serif;margin:0;padding:20px;max-width:800px}h1{color:#6ee7ff}
-body{
-  background:#0f1115;
-  color:#e8ecf1;
-  font-family:system-ui,sans-serif;
-  max-width:800px;
-  margin:0 auto;
-  padding:60px 20px;
-  text-align:center;
-  line-height:1.6;
-}
-h1{
-  color:#6ee7ff;
-  margin-bottom:30px;
-  font-size:28px;
-}
-p{
-  margin-bottom:20px;
-}
-</style>
+  <meta charset="utf-8">
+  <title>About PostPoet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body{
+      background:#0f1115;
+      color:#e8ecf1;
+      font-family:system-ui,sans-serif;
+      max-width:800px;
+      margin:0 auto;
+      padding:60px 20px;
+      text-align:center;
+      line-height:1.6;
+    }
+    h1{
+      color:#6ee7ff;
+      margin-bottom:30px;
+      font-size:28px;
+    }
+    p{
+      margin-bottom:20px;
+    }
+
+    /* HOME ICON TOP-LEFT */
+    .home-btn {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 9999;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      margin: 0;
+      background: none;
+      border: none;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .home-btn svg {
+      width: 20px !important;
+      height: 20px !important;
+      fill: #67d8f4 !important;
+      display: block;
+    }
+
+    .home-btn:hover svg {
+      fill: #54c7e2 !important;
+    }
+  </style>
 </head>
+
 <body>
- <a href="/" class="home-btn">
-  <svg viewBox="0 0 24 24">
-    <path d="M3 10.5L12 3l9 7.5v10.5a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5V15h-3v6a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 3 21V10.5z"/>
-  </svg>
-</a>
-<section class="legal-section">
-  <h1><strong>About PostPoet</strong></h1>
 
-  <p>PostPoet was created for modern creators, sellers and storytellers who want clean, confident, culturally aware captions without the cringe or spam.</p>
+  <!-- SMALL BLUE HOME ICON, TOP-LEFT -->
+  <a href="/" class="home-btn">
+    <svg viewBox="0 0 24 24">
+      <path d="M3 10.5L12 3l9 7.5v10.5a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5V15h-3v6a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 3 21V10.5z"/>
+    </svg>
+  </a>
 
-  <p>Most AI caption tools sound robotic or overly sales driven. PostPoet was built to feel human, PG safe and tuned for creators and resellers who move fast.</p>
+  <section class="legal-section">
+    <h1><strong>About PostPoet</strong></h1>
 
-  <p>By blending your description, your chosen tone and (when used) your image, PostPoet produces captions that match your niche and audience. It works across lifestyle content, product drops, reselling, personal posts, branding and more.</p>
+    <p>PostPoet was created for modern creators, sellers and storytellers who want clean, confident, culturally aware captions without the cringe or spam.</p>
 
-  <p>We are in early release while real users help shape tone tuning, image behaviour and caption quality. Free users get <strong>5 generations per day</strong>, and Pro members have unlimited access.</p>
+    <p>Most AI caption tools sound robotic or overly sales driven. PostPoet was built to feel human, PG safe and tuned for creators and resellers who move fast.</p>
 
-  <p>This is only the start. Future updates will include tone intelligence, niche recognition, smarter product awareness and multi format generation.</p>
+    <p>By blending your description, your chosen tone and (when used) your image, PostPoet produces captions that match your niche and audience. It works across lifestyle content, product drops, reselling, personal posts, branding and more.</p>
 
-  <p>Creators set the culture. PostPoet helps your words move with it.</p>
-</section>
+    <p>We are in early release while real users help shape tone tuning, image behaviour and caption quality. Free users get <strong>5 generations per day</strong>, and Pro members have unlimited access.</p>
 
+    <p>This is only the start. Future updates will include tone intelligence, niche recognition, smarter product awareness and multi format generation.</p>
+
+    <p>Creators set the culture. PostPoet helps your words move with it.</p>
+  </section>
+
+</body>
 </html>
