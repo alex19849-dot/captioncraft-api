@@ -1,64 +1,101 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Privacy Policy | PostPoet</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>body{background:#0f1115;color:#e8ecf1;font-family:system-ui,sans-serif;margin:0;padding:20px;max-width:800px}h1{color:#6ee7ff}
-body{
-  background:#0f1115;
-  color:#e8ecf1;
-  font-family:system-ui,sans-serif;
-  max-width:800px;
-  margin:0 auto;
-  padding:60px 20px;
-  text-align:center;
-  line-height:1.6;
-}
-h1{
-  color:#6ee7ff;
-  margin-bottom:30px;
-  font-size:28px;
-}
-p{
-  margin-bottom:20px;
-}
-</style>
+  <meta charset="utf-8">
+  <title>Privacy Policy | PostPoet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body{
+      background:#0f1115;
+      color:#e8ecf1;
+      font-family:system-ui,sans-serif;
+      max-width:800px;
+      margin:0 auto;
+      padding:60px 20px;
+      text-align:center;
+      line-height:1.6;
+    }
+    h1{
+      color:#6ee7ff;
+      margin-bottom:30px;
+      font-size:28px;
+    }
+    p{
+      margin-bottom:20px;
+    }
+
+    /* HOME ICON TOP-LEFT */
+    .home-btn {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      z-index: 9999;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      margin: 0;
+      background: none;
+      border: none;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .home-btn svg {
+      width: 20px !important;
+      height: 20px !important;
+      fill: #67d8f4 !important;
+      display: block;
+    }
+
+    .home-btn:hover svg {
+      fill: #54c7e2 !important;
+    }
+  </style>
 </head>
+
 <body>
- <a href="/" class="home-btn">
-  <svg viewBox="0 0 24 24">
-    <path d="M3 10.5L12 3l9 7.5v10.5a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5V15h-3v6a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 3 21V10.5z"/>
-  </svg>
-</a>
-<section class="legal-section">
-  <h1><strong>Privacy Policy</strong></h1>
-  <p><strong>Effective Date:</strong> 14 Nov 2025</p>
-  <p><strong>Owner:</strong> Alexandra Davies (PostPoet)</p>
-  <p><strong>Contact:</strong> <a href="mailto:postpoet.info@gmail.com">postpoet.info@gmail.com</a></p>
 
-  <p>PostPoet respects your privacy and only collects the minimum information required to operate the service and improve your experience.</p>
+  <!-- HOME BUTTON -->
+  <a href="/" class="home-btn">
+    <svg viewBox="0 0 24 24">
+      <path d="M3 10.5L12 3l9 7.5v10.5a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5V15h-3v6a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 3 21V10.5z"/>
+    </svg>
+  </a>
 
-  <h2><strong>Email Usage</strong></h2>
-  <p>If you choose to provide your email, it is used only for verifying Pro plan access, managing your subscription and assisting with account issues. We do not sell or share your email with any third party marketing companies.</p>
+  <section class="legal-section">
+    <h1><strong>Privacy Policy</strong></h1>
 
-  <h2><strong>Caption Input</strong></h2>
-  <p>Any text, speech input or description you enter is used solely to generate captions. PostPoet does not store or reuse your captions.</p>
+    <p><strong>Effective Date:</strong> 14 Nov 2025</p>
+    <p><strong>Owner:</strong> Alexandra Davies (PostPoet)</p>
+    <p><strong>Contact:</strong> <a href="mailto:postpoet.info@gmail.com">postpoet.info@gmail.com</a></p>
 
-  <h2><strong>Uploaded Images</strong></h2>
-  <p>Images uploaded for caption generation are processed temporarily and then discarded. They are not stored or reused.</p>
+    <p>PostPoet respects your privacy and only collects the minimum information required to operate the service and improve your experience.</p>
 
-  <h2><strong>Analytics</strong></h2>
-  <p>We collect basic anonymous usage data, such as caption counts or error logs, to improve reliability. No personally identifiable information is tracked.</p>
+    <h2><strong>Email Usage</strong></h2>
+    <p>If you choose to provide your email, it is used only for verifying Pro plan access, managing your subscription and assisting with account issues. We do not sell or share your email with any third party marketing companies.</p>
 
-  <h2><strong>Third Party Services</strong></h2>
-  <p>PostPoet uses trusted service providers such as Vercel, Stripe and Upstash Redis. These services follow their own privacy policies and industry standard security practices.</p>
+    <h2><strong>Caption Input</strong></h2>
+    <p>Any text, speech input or description you enter is used solely to generate captions. PostPoet does not store or reuse your captions.</p>
 
-  <h2><strong>Your Rights</strong></h2>
-  <p>You may request removal of your data or confirmation of what data we hold at any time by contacting <strong>postpoet.info@gmail.com</strong>.</p>
+    <h2><strong>Uploaded Images</strong></h2>
+    <p>Images uploaded for caption generation are processed temporarily and then discarded. They are not stored or reused.</p>
 
-  <h2><strong>Policy Updates</strong></h2>
-  <p>We may update this policy as PostPoet evolves. Continued use of the service indicates acceptance of the latest version.</p>
-</section>
+    <h2><strong>Analytics</strong></h2>
+    <p>We collect basic anonymous usage data, such as caption counts or error logs, to improve reliability. No personally identifiable information is tracked.</p>
 
+    <h2><strong>Third Party Services</strong></h2>
+    <p>PostPoet uses trusted service providers such as Vercel, Stripe and Upstash Redis. These services follow their own privacy policies and industry standard security practices.</p>
+
+    <h2><strong>Your Rights</strong></h2>
+    <p>You may request removal of your data or confirmation of what data we hold at any time by contacting <strong>postpoet.info@gmail.com</strong>.</p>
+
+    <h2><strong>Policy Updates</strong></h2>
+    <p>We may update this policy as PostPoet evolves. Continued use of the service indicates acceptance of the latest version.</p>
+  </section>
+
+</body>
 </html>
