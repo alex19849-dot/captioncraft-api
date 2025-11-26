@@ -27,9 +27,21 @@ const LIFESTYLE_TONES = [
 ];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS
-  res.setHeader("Access-Control-Allow-Origin", "https://postpoet.vercel.app");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  // CORS SUPPORT MULTIPLE ORIGINS
+  const allowedOrigins = [
+    "https://postpoet.vercel.app",
+    "https://postpoet.co.uk",
+    "https://www.postpoet.co.uk",
+    "http://localhost:3000"
+  ];
+
+  const origin = req.headers.origin as string | undefined;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
@@ -59,6 +71,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const toneValue =
       toneRaw ||
       "Product selling direct";
+
 
     // Normalise style
     const styleKey = styleRaw.toLowerCase();
