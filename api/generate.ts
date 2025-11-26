@@ -25,15 +25,30 @@ function coerceStyle(v: unknown): StyleKey {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-   res.setHeader("Access-Control-Allow-Origin", "https://postpoet.vercel.app");
+  const allowedOrigins = [
+    "https://postpoet.vercel.app",
+    "https://postpoet.co.uk",
+    "https://www.postpoet.co.uk",
+    "http://localhost:3000"
+  ];
+
+  const origin = req.headers.origin as string | undefined;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Vary", "Origin");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
+
   try {
-    if (req.method !== "POST") return res.status(405).send("POST only");
+    if (req.method !== "POST") {
+      return res.status(405).send("POST only");
+    }
 
     // Vercel usually parses JSON body, but guard if not
     const body =
