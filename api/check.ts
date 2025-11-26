@@ -7,11 +7,12 @@ const redis = new Redis({
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS ALLOW MULTIPLE DOMAINS
   const allowedOrigins = [
     "https://postpoet.vercel.app",
     "https://postpoet.co.uk",
     "https://www.postpoet.co.uk",
-    "http://localhost:3000" // keep this if you dev locally, optional
+    "http://localhost:3000"
   ];
 
   const origin = req.headers.origin as string | undefined;
@@ -27,10 +28,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  // ...rest of your existing logic
-}
+  try {
+    // READ EMAIL FROM QUERY
+    const email = (req.query.email as string | undefined)?.toLowerCase();
 
-    // MATCH WHAT WEBHOOK SAVES
+    if (!email) {
+      return res.status(400).json({ error: "Missing email." });
+    }
+
+    // CHECK IF USER IS PRO
     const isMember = await redis.sismember("pro_users", email);
 
     return res.status(200).json({
