@@ -7,16 +7,28 @@ const redis = new Redis({
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader("Access-Control-Allow-Origin", "https://postpoet.vercel.app");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  const allowedOrigins = [
+    "https://postpoet.vercel.app",
+    "https://postpoet.co.uk",
+    "https://www.postpoet.co.uk",
+    "http://localhost:3000" // keep this if you dev locally, optional
+  ];
 
-  if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
+  const origin = req.headers.origin as string | undefined;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
 
-  try {
-    const email = (req.query.email as string || "").trim().toLowerCase();
-    if (!email) return res.status(400).json({ error: "Missing email" });
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  // ...rest of your existing logic
+}
 
     // MATCH WHAT WEBHOOK SAVES
     const isMember = await redis.sismember("pro_users", email);
