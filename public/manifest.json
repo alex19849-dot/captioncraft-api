@@ -3,9 +3,30 @@
   "short_name": "PostPoet",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#0f1115",
+  "theme_color": "#67d8f4",
   "icons": [
+    {
+      "src": "/icon-120.png",
+      "sizes": "120x120",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-167.png",
+      "sizes": "167x167",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
