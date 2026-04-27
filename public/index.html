@@ -93,33 +93,6 @@
       #outputs{ margin-top:14px; gap:8px; }
       footer{ margin-top:26px; font-size:11px; }
     }
-
-    .home-btn {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      z-index: 9999;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      background: none;
-      border: none;
-      padding: 0;
-      margin: 0;
-      cursor: pointer;
-    }
-
-    .home-btn svg {
-      width: 22px;
-      height: 22px;
-      fill: #67d8f4;
-    }
-
-    .home-btn:hover svg {
-      fill: #54c7e2;
-    }
   </style>
 
   <link rel="manifest" href="/manifest.json">
@@ -159,7 +132,7 @@
 
         <button id="photoBtn"
           style="margin-top:10px;width:100%;padding:10px;border-radius:10px;border:1px solid #2f3852;background:#6ee7ff;color:#182032;cursor:pointer;font-size:14px;">
-          Upload Photo
+          Upload Photos
         </button>
       </div>
 
@@ -171,9 +144,9 @@
         </select>
 
         <label for="style">Listing Style</label>
-<select id="style">
-  <option value="detailed" selected>Professional Detailed Listing</option>
-</select>
+        <select id="style">
+          <option value="detailed" selected>Professional Detailed Listing</option>
+        </select>
 
         <div class="actions">
           <button id="generate" class="primary">Generate listing</button>
@@ -196,7 +169,6 @@
     <div id="outputs"></div>
   </div>
 
-  <!-- Email modal -->
   <div class="modal-backdrop" id="emailModal">
     <div class="modal">
       <h3>Quick thing, what’s your email?</h3>
@@ -211,7 +183,6 @@
     </div>
   </div>
 
-  <!-- Contact modal -->
   <div class="modal-backdrop" id="contactModal">
     <div class="modal">
       <h3>Contact Support</h3>
@@ -233,18 +204,16 @@
   <script>
   "use strict";
 
-  /* =============== CONFIG =============== */
   const DAILY_LIMIT  = 5;
   const GENERATE_URL = "https://postpoet-api.vercel.app/api/generate";
   const CHECK_URL    = "https://postpoet-api.vercel.app/api/check";
   const STRIPE_LINK  = "https://buy.stripe.com/8x25kCfJf8Ng2p3c558Zq01";
   const PHOTO_URL    = "https://postpoet-api.vercel.app/api/photo";
 
-  /* =============== STATE + DOM =============== */
   let isPro = false;
   let email = (localStorage.getItem("cc_email") || "").trim();
   let lastKnownPro = localStorage.getItem("lastKnownPro") === "true";
-  let uploadedPhotoBase64 = null;
+  let uploadedPhotoBase64s = [];
 
   const $             = (id) => document.getElementById(id);
   const limitInfo     = $("limitInfo");
@@ -266,7 +235,6 @@
   const contactModal  = $("contactModal");
   const closeContact  = $("closeContact");
 
-  /* =============== USAGE =============== */
   function getUsage(){
     const today  = new Date().toISOString().slice(0,10);
     const record = JSON.parse(localStorage.getItem("captionUsageShared") || "{}");
@@ -298,7 +266,6 @@
     }
   }
 
-  /* =============== UI APPLY =============== */
   function applyUIForPro(){
     if (micBtn){
       micBtn.classList.remove("lock");
@@ -326,7 +293,6 @@
     }
   }
 
-  /* =============== PRO STATUS =============== */
   async function refreshProStatus(){
     try {
       if (!email) {
@@ -357,7 +323,6 @@
     }
   }
 
-  /* =============== EMAIL MODAL =============== */
   function openModal(){
     if (modal) modal.style.display = "flex";
   }
@@ -396,7 +361,6 @@
     });
   }
 
-  /* =============== SPEECH TO TEXT =============== */
   let recognition = null;
 
   if ("webkitSpeechRecognition" in window) {
@@ -488,107 +452,106 @@
     if (micBtn) micBtn.title = "Speech to text not supported in this browser";
   }
 
-/* =============== GENERATE LISTINGS =============== */
-generateBtn.addEventListener("click", async () => {
-  const desc = (descEl.value || "").trim();
-  const platform = platformEl.value;
-  const style = "detailed";
+  generateBtn.addEventListener("click", async () => {
+    const desc = (descEl.value || "").trim();
+    const platform = platformEl.value;
+    const style = "detailed";
 
-  if (!uploadedPhotoBase64 && !desc) {
-    alert("Add item details or upload a photo first.");
-    return;
-  }
-
-  if (!isPro && !canUse()) {
-    alert("You’ve used your free listings today. Go Pro for unlimited.");
-    return;
-  }
-
-  outputs.innerHTML = "<div class='out'>Generating your listing…</div>";
-
-  try {
-    let r;
-
-    if (uploadedPhotoBase64) {
-      r = await fetch(PHOTO_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64: uploadedPhotoBase64,
-          desc,
-          platform,
-          style,
-          email
-        })
-      });
-    } else {
-      r = await fetch(GENERATE_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          desc,
-          platform,
-          style,
-          email
-        })
-      });
-    }
-
-    if (!r.ok) {
-      const t = await r.text();
-      throw new Error(`API ${r.status}: ${t}`);
-    }
-
-    const data = await r.json();
-    const listings = data.listings || data.captions || data.results || [];
-
-    outputs.innerHTML = "";
-
-    if (!listings.length) {
-      outputs.innerHTML = "<div class='out'>No listing came back. Backend needs checking.</div>";
+    if (uploadedPhotoBase64s.length === 0 && !desc) {
+      alert("Add item details or upload photos first.");
       return;
     }
 
-    listings.forEach(line => {
-      const pill = document.createElement("button");
+    if (!isPro && !canUse()) {
+      alert("You’ve used your free listings today. Go Pro for unlimited.");
+      return;
+    }
 
-      pill.textContent = line;
-      pill.className = "pillCopy";
-      pill.style.cssText =
-        "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
+    outputs.innerHTML = "<div class='out'>Generating your listing…</div>";
 
-      pill.style.whiteSpace = "pre-wrap";
-      pill.style.wordBreak = "break-word";
+    try {
+      let r;
 
-      pill.addEventListener("click", () => {
-        navigator.clipboard.writeText(line);
-        pill.style.borderColor = "#6ee7ff";
-        pill.style.background = "#112030";
-        pill.textContent = "Copied ✓";
+      if (uploadedPhotoBase64s.length > 0) {
+        r = await fetch(PHOTO_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageBase64s: uploadedPhotoBase64s,
+            desc,
+            platform,
+            style,
+            email
+          })
+        });
+      } else {
+        r = await fetch(GENERATE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            desc,
+            platform,
+            style,
+            email
+          })
+        });
+      }
 
-        setTimeout(() => {
-          pill.textContent = line;
-          pill.style.borderColor = "#2e364b";
-          pill.style.background = "#181f2d";
-        }, 900);
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error(`API ${r.status}: ${t}`);
+      }
+
+      const data = await r.json();
+      const listings = data.listings || data.captions || data.results || [];
+
+      outputs.innerHTML = "";
+
+      if (!listings.length) {
+        outputs.innerHTML = "<div class='out'>No listing came back. Backend needs checking.</div>";
+        return;
+      }
+
+      listings.forEach(line => {
+        const pill = document.createElement("button");
+
+        pill.textContent = line;
+        pill.className = "pillCopy";
+        pill.style.cssText =
+          "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
+
+        pill.style.whiteSpace = "pre-wrap";
+        pill.style.wordBreak = "break-word";
+
+        pill.addEventListener("click", () => {
+          navigator.clipboard.writeText(line);
+          pill.style.borderColor = "#6ee7ff";
+          pill.style.background = "#112030";
+          pill.textContent = "Copied ✓";
+
+          setTimeout(() => {
+            pill.textContent = line;
+            pill.style.borderColor = "#2e364b";
+            pill.style.background = "#181f2d";
+          }, 900);
+        });
+
+        outputs.appendChild(pill);
       });
 
-      outputs.appendChild(pill);
-    });
+      if (!isPro) recordUse();
 
-    if (!isPro) recordUse();
+      uploadedPhotoBase64s = [];
+      hiddenPhotoInput.value = "";
+      if (photoBtn) photoBtn.textContent = "Upload Photos";
 
-    uploadedPhotoBase64 = null;
-    hiddenPhotoInput.value = "";
-    if (photoBtn) photoBtn.textContent = "Upload Photo";
+    } catch (e) {
+      outputs.innerHTML =
+        `<div class="out" style="color:#ff6b6b">Error: ${e.message || "Request failed"}</div>`;
+      console.error(e);
+    }
+  });
 
-  } catch (e) {
-    outputs.innerHTML =
-      `<div class="out" style="color:#ff6b6b">Error: ${e.message || "Request failed"}</div>`;
-    console.error(e);
-  }
-});
-  /* =============== NAV =============== */
   if (goProBtn) {
     goProBtn.addEventListener("click", () => {
       window.location.href = STRIPE_LINK;
@@ -625,10 +588,10 @@ generateBtn.addEventListener("click", async () => {
     });
   }
 
-  /* =============== PHOTO UPLOAD =============== */
   const hiddenPhotoInput = document.createElement("input");
   hiddenPhotoInput.type = "file";
   hiddenPhotoInput.accept = "image/*";
+  hiddenPhotoInput.multiple = true;
   hiddenPhotoInput.style.display = "none";
   document.body.appendChild(hiddenPhotoInput);
 
@@ -647,39 +610,59 @@ generateBtn.addEventListener("click", async () => {
   }
 
   hiddenPhotoInput.addEventListener("change", () => {
-    const file = hiddenPhotoInput.files[0];
-    if (!file) return;
+    const files = Array.from(hiddenPhotoInput.files || []);
+    if (!files.length) return;
 
-    outputs.innerHTML = "<div class='out'>Reading your photo…</div>";
+    uploadedPhotoBase64s = [];
+    outputs.innerHTML = "<div class='out'>Reading your photos…</div>";
 
-    const reader = new FileReader();
+    const limitedFiles = files.slice(0, 6);
 
-    reader.onload = () => {
-      uploadedPhotoBase64 = reader.result.split(",")[1];
+    Promise.all(
+      limitedFiles.map(file => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
 
-      outputs.innerHTML = `
-        <div class='out' style='color:#6ee7ff'>
-          Photo uploaded and ready. Choose platform and listing type, then hit Generate.
-        </div>`;
-    };
+          reader.onload = () => {
+            const result = reader.result;
+            if (typeof result === "string") {
+              resolve(result.split(",")[1]);
+            } else {
+              reject(new Error("Could not read photo"));
+            }
+          };
 
-    reader.readAsDataURL(file);
+          reader.onerror = () => reject(new Error("Could not read photo"));
+          reader.readAsDataURL(file);
+        });
+      })
+    )
+      .then(images => {
+        uploadedPhotoBase64s = images;
+
+        if (photoBtn) {
+          photoBtn.textContent = `${images.length} Photo${images.length > 1 ? "s" : ""} Added ✓`;
+        }
+
+        outputs.innerHTML = `
+          <div class='out' style='color:#6ee7ff'>
+            ${images.length} photo${images.length > 1 ? "s" : ""} uploaded and ready. Choose platform, then hit Generate.
+          </div>`;
+      })
+      .catch(err => {
+        uploadedPhotoBase64s = [];
+        outputs.innerHTML = `<div class='out' style='color:#ff6b6b'>Error: ${err.message}</div>`;
+      });
   });
 
-  /* =============== BOOT =============== */
   (function boot(){
     try {
       if (email && emailInput) emailInput.value = email;
-
       if (micBtn) micBtn.classList.remove("lock");
-
       updateLimitDisplay();
-
       isPro = lastKnownPro;
       applyUIForPro();
-
       refreshProStatus();
-
     } catch (e) {
       console.error("boot error", e);
     }
