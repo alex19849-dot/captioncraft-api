@@ -6,88 +6,177 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
+    :root{
+      --bg:#0f1115;
+      --card:#171a21;
+      --muted:#8b95a7;
+      --line:#2f3852;
+      --text:#e8ecf1;
+      --accent:#67d8f4;
+    }
+
+    *{box-sizing:border-box}
+
     body{
-      background:#0f1115;
-      color:#e8ecf1;
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
       font-family:system-ui,sans-serif;
-      max-width:800px;
+      line-height:1.7;
+      padding:54px 18px;
+    }
+
+    .page{
+      max-width:780px;
       margin:0 auto;
-      padding:60px 20px;
-      text-align:center;
-      line-height:1.6;
     }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:30px;
+      box-shadow:0 10px 36px rgba(0,0,0,.35);
+    }
+
     h1{
-      color:#6ee7ff;
-      margin-bottom:30px;
-      font-size:28px;
+      color:var(--accent);
+      text-align:center;
+      margin:0 0 12px;
+      font-size:32px;
     }
-    h2 {
-  color: #6ee7ff;
-  margin-top: 25px;
-  margin-bottom: 10px;
-  font-size: 22px;
-}
+
+    .intro{
+      text-align:center;
+      color:var(--muted);
+      margin:0 0 28px;
+      font-size:15px;
+    }
+
+    h2{
+      color:var(--accent);
+      font-size:18px;
+      margin:28px 0 10px;
+    }
 
     p{
-      margin-bottom:20px;
+      margin:0 0 16px;
+      color:var(--muted);
+      font-size:15px;
     }
 
-    /* HOME ICON TOP-LEFT */
-    .home-btn {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      z-index: 9999;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px;
-      height: 26px;
-      padding: 0;
-      margin: 0;
-      background: none;
-      border: none;
-      text-decoration: none;
-      cursor: pointer;
+    strong{
+      color:var(--text);
     }
 
-    .home-btn svg {
-      width: 20px !important;
-      height: 20px !important;
-      fill: #67d8f4 !important;
-      display: block;
+    .home-btn{
+      position:fixed;
+      top:15px;
+      left:15px;
+      z-index:9999;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:28px;
+      height:28px;
+      background:none;
+      border:none;
+      padding:0;
+      text-decoration:none;
+      cursor:pointer;
     }
 
-    .home-btn:hover svg {
-      fill: #54c7e2 !important;
+    .home-btn svg{
+      width:22px;
+      height:22px;
+      fill:var(--accent);
+      display:block;
+    }
+
+    .home-btn:hover svg{
+      fill:#54c7e2;
+    }
+
+    @media(max-width:540px){
+      body{
+        padding:44px 14px;
+      }
+
+      .card{
+        padding:22px;
+      }
+
+      h1{
+        font-size:28px;
+      }
+
+      h2{
+        font-size:16px;
+      }
+
+      p{
+        font-size:14px;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <!-- SMALL BLUE HOME ICON, TOP-LEFT -->
-  <a href="/" class="home-btn">
+  <a href="/" class="home-btn" aria-label="Back to home">
     <svg viewBox="0 0 24 24">
       <path d="M3 10.5L12 3l9 7.5v10.5a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5V15h-3v6a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 3 21V10.5z"/>
     </svg>
   </a>
 
-  <section class="legal-section">
-    <h1><strong>About PostPoet</strong></h1>
+  <main class="page">
+    <div class="card">
+      <h1>About PostPoet</h1>
+      <p class="intro">Built for resellers who want better listings, faster.</p>
 
-    <p>PostPoet was created for modern creators, sellers and storytellers who want clean, confident, culturally aware captions without the cringe or spam.</p>
+      <p>
+        PostPoet was created to solve a simple problem, writing listings is repetitive, slow, and most AI tools write like they're trying far too hard.
+      </p>
 
-    <p>Most AI caption tools sound robotic or overly sales driven. PostPoet was built to feel human, PG safe and tuned for creators and resellers who move fast.</p>
+      <p>
+        You know the type, awkward buzzwords, fake enthusiasm, and descriptions that sound like a budget fashion catalogue from 2009. Nobody needs that nonsense when listing a jumper on Vinted.
+      </p>
 
-    <p>By blending your description, your chosen tone and (when used) your image, PostPoet produces captions that match your niche and audience. It works across lifestyle content, product drops, reselling, personal posts, branding and more.</p>
+      <h2>What PostPoet Does</h2>
 
-    <p>We are in early release while real users help shape tone tuning, image behaviour and caption quality. Free users get <strong>5 generations per day</strong>, and Pro members have unlimited access.</p>
+      <p>
+        PostPoet helps you generate clean, useful resale listings for platforms like <strong>Vinted</strong> and <strong>eBay</strong>.
+      </p>
 
-    <p>This is only the start. Future updates will include tone intelligence, niche recognition, smarter product awareness and multi format generation.</p>
+      <p>
+        Add item details manually, speak them using voice input, or upload photos, front, back, labels, flaws, close-ups, whatever helps tell the story of the item, and PostPoet turns that into polished listing copy that actually sounds human.
+      </p>
 
-    <p>Creators set the culture. PostPoet helps your words move with it.</p>
-  </section>
+      <h2>Built for Real Sellers</h2>
+
+      <p>
+        Whether you're clearing your wardrobe, flipping charity shop finds, running a resale side hustle, or listing stock daily, PostPoet is designed to save time without making your listings sound robotic.
+      </p>
+
+      <p>
+        Clear titles, natural descriptions, relevant hashtags, and no cringe wording. Just useful copy that helps buyers understand what you're selling.
+      </p>
+
+      <h2>Always Improving</h2>
+
+      <p>
+        PostPoet is actively being refined, with smarter photo reading, stronger listing detail recognition, better platform tuning, and sharper output quality being improved over time.
+      </p>
+
+      <p>
+        The goal is simple, make listing online quicker, easier and better looking, without the waffle.
+      </p>
+
+      <p>
+        <strong>Simple in, solid listing out.</strong>
+      </p>
+    </div>
+  </main>
 
 </body>
 </html>
