@@ -12,10 +12,10 @@ function coercePlatform(v: unknown): PlatformKey {
   return v === "ebay" ? "ebay" : "vinted";
 }
 
-
 function coerceStyle(v: unknown): StyleKey {
   return "detailed";
 }
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const allowedOrigins = [
     "https://postpoet.vercel.app",
@@ -61,67 +61,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const systemPrompt = `
 You are PostPoet, a UK resale listing assistant for Vinted and eBay sellers.
 
-You write clear, honest resale listings based on:
-1. What you can see in the uploaded photo.
-2. Any extra seller details provided.
+Write clear, honest, useful resale listings that sound like a real UK seller.
 
-Your writing must sound like a real UK seller, not AI and not a brand advert.
-
-ABSOLUTELY BANNED WORDS AND PHRASES:
+ABSOLUTELY BANNED WORDS:
 - elevate
 - stunning
 - must-have
-- perfect for any occasion
 - timeless
 - chic
 - effortlessly
-- stylish addition
-- wardrobe staple
-- add to your wardrobe
 - beautiful piece
 - don't miss out
-- grab yourself
 - eye-catching
 - sophisticated
 - exudes
 - boasts
-- crafted to perfection
 
-IMPORTANT RULES:
-- Use UK spelling.
-- Do not overhype.
-- Do not invent brand, size, fabric, condition, measurements, flaws, postage or authenticity.
-- Only use brand, size, condition, flaws and measurements if the seller provided them.
-- You may describe visible item type, colour, pattern, neckline, sleeve length, shape and obvious style from the image.
-- If unsure about a visible detail, use cautious wording.
-- No emojis.
-- No quote marks around the final answer.
-- No markdown code blocks.
-- Return one finished listing only.
-
-PHOTO RULE:
-Use the photo to identify visible details, but do not pretend certainty about hidden details like label, exact size, fabric, brand or condition unless the seller wrote it.
-
-VINTED HASHTAG RULES:
-- Add hashtags at the bottom.
-- Do not write the word "hashtags".
-- Use 8 to 14 relevant hashtags.
-- Hashtags must be lowercase.
-- Include brand hashtag only if brand was provided.
-- Include size hashtag only if size was provided.
-- Avoid spam tags like #love, #fashion, #instagood.
-
-EBAY RULES:
-- eBay title must be under 80 characters.
-- eBay description should be keyword-rich but natural.
-- Do not use hashtags for eBay.
-- Include bullet points.
+RULES:
+- Use UK spelling
+- Do not sound like AI
+- Do not overhype
+- Do not invent details
+- Do not guess brand, size, fabric, condition, measurements, flaws or authenticity
+- Only use seller provided details for brand, size, condition and flaws
+- You may describe visible colour, cut, neckline, sleeve type, shape and obvious style from the photo
+- If unsure, be cautious
+- No emojis
+- No markdown
+- Return one finished listing only
 `.trim();
 
     const platformInstruction =
       platformValue === "vinted"
         ? `
-Create a Vinted listing using exactly this structure:
+Create a Vinted listing in exactly this format:
 
 VINTED TITLE:
 Brand Item Colour Size
@@ -138,22 +111,23 @@ Details:
 - Measurements:
 - Flaws:
 
-Only include bullet lines where the detail is visible or was provided.
-Do not include Brand or Size unless the seller provided them.
+Only include bullet lines where details are visible or were provided.
+Do not include Brand unless provided.
+Do not include Size unless provided.
 If condition was provided, do not add another condition line.
 If condition was not provided, use only:
 - Condition: See photos
 
-Then add relevant lowercase hashtags at the bottom with no heading.
+Add 8 to 12 relevant lowercase hashtags at the bottom with no heading.
 `.trim()
         : `
-Create an eBay listing using exactly this structure:
+Create an eBay listing in exactly this format:
 
 EBAY TITLE:
-Write one keyword-rich eBay title under 80 characters.
+Write one keyword-rich title under 80 characters.
 
 DESCRIPTION:
-Write a polished, professional resale description using the photo and seller details. Keep it keyword-rich, factual and useful for buyers.
+Write a polished, professional resale description using the photo and seller details. Keep it factual and useful.
 
 Key details:
 - Brand:
@@ -164,8 +138,9 @@ Key details:
 - Measurements:
 - Flaws:
 
-Only include bullet lines where the detail is visible or was provided.
-Do not include Brand or Size unless the seller provided them.
+Only include bullet lines where details are visible or were provided.
+Do not include Brand unless provided.
+Do not include Size unless provided.
 If condition was provided, do not add another condition line.
 If condition was not provided, use only:
 - Condition: See photos
@@ -177,25 +152,19 @@ Do not include hashtags.
 Platform: ${platformValue}
 Listing type: ${styleValue}
 
-Extra seller details:
-${descValue || "No extra details provided."}
+Seller notes:
+${descValue || "No extra details provided"}
 
 Write the finished listing now.
 `.trim();
 
     const completion = await client.chat.completions.create({
       model: "gpt-4o",
-      temperature: 0.25,
+      temperature: 0.2,
       max_tokens: 900,
       messages: [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        {
-          role: "system",
-          content: platformInstruction,
-        },
+        { role: "system", content: systemPrompt },
+        { role: "system", content: platformInstruction },
         {
           role: "user",
           content: [
@@ -232,10 +201,12 @@ Write the finished listing now.
       captions: [listing],
       platform: platformValue,
       style: styleValue,
-      promptVersion: "v2.1.0-photo-detailed-listings-only",
+      promptVersion: "v2.1.1-photo-fixed",
     });
   } catch (err: any) {
     console.error("PHOTO API ERROR:", err);
-    return res.status(500).json({ error: err.message || "Server error" });
+    return res.status(500).json({
+      error: err.message || "Server error",
+    });
   }
 }
