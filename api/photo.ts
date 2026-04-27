@@ -231,7 +231,7 @@ Write the finished listing now.
       captions: [listing],
       platform: platformValue,
       style: styleValue,
-      promptVersion: "v2.0.0-photo-listings-only",
+      promptVersion: "v2.1.0-photo-detailed-listings-only",
     });
   } catch (err: any) {
     console.error("PHOTO API ERROR:", err);
