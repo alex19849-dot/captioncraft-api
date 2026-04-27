@@ -10,14 +10,15 @@ const redis = new Redis({
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
 type PlatformKey = "vinted" | "ebay";
-type StyleKey = "standard" | "detailed" | "bundle";
+type StyleKey = "detailed";
 
 function coercePlatform(v: unknown): PlatformKey {
   return v === "ebay" ? "ebay" : "vinted";
 }
 
+
 function coerceStyle(v: unknown): StyleKey {
-  return v === "detailed" || v === "bundle" ? v : "standard";
+  return "detailed";
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
