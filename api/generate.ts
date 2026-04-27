@@ -169,7 +169,8 @@ Details:
 - Flaws:
 
 Only include bullet lines where the detail was actually provided.
-If condition was not provided, use:
+If condition was provided, do not add another condition line.
+If condition was not provided, use only:
 - Condition: See photos
 
 Then add relevant lowercase hashtags at the bottom with no heading.
@@ -193,7 +194,8 @@ Key details:
 - Flaws:
 
 Only include bullet lines where the detail was actually provided.
-If condition was not provided, use:
+If condition was provided, do not add another condition line.
+If condition was not provided, use only:
 - Condition: See photos
 Do not include hashtags.
 `.trim();
