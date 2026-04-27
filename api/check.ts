@@ -1,13 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { Redis } from "@upstash/redis";
-
-const redis = new Redis({
-  url: (process.env.UPSTASH_REDIS_REST_URL || "").trim(),
-  token: (process.env.UPSTASH_REDIS_REST_TOKEN || "").trim()
-});
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS ALLOW MULTIPLE DOMAINS
   const allowedOrigins = [
     "https://postpoet.vercel.app",
     "https://postpoet.co.uk",
@@ -29,28 +22,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // READ EMAIL FROM QUERY
-    const email = (req.query.email as string | undefined)?.toLowerCase();
+    const url = (process.env.UPSTASH_REDIS_REST_URL || "").trim();
+    const token = (process.env.UPSTASH_REDIS_REST_TOKEN || "").trim();
 
-    if (!email) {
-      return res.status(400).json({ error: "Missing email." });
-    }
-
-    // CHECK IF USER IS PRO
-    const isMember = await redis.sismember("pro_users", email);
-
-    return res.status(200).json({
-      email,
-      pro: !!isMember
+    const test = await fetch(`${url}/ping`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
 
-   } catch (err: any) {
-    console.error("CHECK API ERROR:", err);
+    const text = await test.text();
 
+    return res.status(200).json({
+      ok: test.ok,
+      status: test.status,
+      response: text,
+      hasRedisUrl: !!url,
+      hasRedisToken: !!token
+    });
+
+  } catch (err: any) {
     return res.status(500).json({
       error: err.message || "Server error",
       hasRedisUrl: !!process.env.UPSTASH_REDIS_REST_URL,
       hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN
     });
   }
-
+}
