@@ -16,7 +16,6 @@ function coercePlatform(v: unknown): PlatformKey {
   return v === "ebay" ? "ebay" : "vinted";
 }
 
-
 function coerceStyle(v: unknown): StyleKey {
   return "detailed";
 }
@@ -148,16 +147,19 @@ LISTING QUALITY RULES:
 - If it is a bundle, write it naturally as a bundle based on the seller details.
 - Avoid filler, hype and vague AI wording.
 - Prioritise useful buyer information over sales language.
+`.trim();
+
     const platformInstruction =
       platform === "vinted"
-     
+        ? `
 Create a Vinted listing using exactly this structure:
 
 VINTED TITLE:
 Brand Item Colour Size
 
 DESCRIPTION:
-Write a polished, professional resale description using the photo and seller details. Make it detailed enough to help a buyer decide, but keep it factual and natural.
+Write a polished, professional resale description using the seller details. Make it detailed enough to help a buyer decide, but keep it factual and natural.
+
 Details:
 - Brand:
 - Size:
@@ -181,7 +183,7 @@ EBAY TITLE:
 Write one keyword-rich eBay title under 80 characters.
 
 DESCRIPTION:
-Write a polished, professional resale description using the photo and seller details. Keep it keyword-rich, factual and useful for buyers.
+Write a polished, professional resale description using the seller details. Keep it keyword-rich, factual and useful for buyers.
 
 Key details:
 - Brand:
@@ -196,6 +198,7 @@ Only include bullet lines where the detail was actually provided.
 If condition was provided, do not add another condition line.
 If condition was not provided, use only:
 - Condition: See photos
+
 Do not include hashtags.
 `.trim();
 
@@ -211,7 +214,7 @@ Write the finished listing now.
 
     const completion = await client.chat.completions.create({
       model: "gpt-4o",
-      temperature: 0.35,
+      temperature: 0.3,
       max_tokens: 900,
       messages: [
         { role: "system", content: systemPrompt },
@@ -239,7 +242,7 @@ Write the finished listing now.
       pro: isPro,
       platform,
       style,
-      promptVersion: "v2.1.0-detailed-listings-only",
+      promptVersion: "v2.1.1-generate-fixed",
     });
   } catch (e: any) {
     console.error("generate error:", e);
