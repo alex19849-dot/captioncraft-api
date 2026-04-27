@@ -794,32 +794,52 @@
         return;
       }
 
-      listings.forEach(line => {
-        const pill = document.createElement("button");
+     listings.forEach(line => {
+  const titleMatch = line.match(/(?:VINTED TITLE:|EBAY TITLE:)\s*([\s\S]*?)(?:\n\s*DESCRIPTION:)/i);
+  const descriptionMatch = line.match(/DESCRIPTION:\s*([\s\S]*)/i);
 
-        pill.textContent = line;
-        pill.className = "pillCopy";
-        pill.style.cssText =
-          "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:10px;padding:12px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;line-height:1.5;";
+  const titleText = titleMatch ? titleMatch[1].trim() : "";
+  const descriptionText = descriptionMatch ? descriptionMatch[1].trim() : line.trim();
 
-        pill.style.whiteSpace = "pre-wrap";
-        pill.style.wordBreak = "break-word";
+  function createCopyBox(label, text) {
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "margin-bottom:12px;";
 
-        pill.addEventListener("click", () => {
-          navigator.clipboard.writeText(line);
-          pill.style.borderColor = "#6ee7ff";
-          pill.style.background = "#112030";
-          pill.textContent = "Copied ✓";
+    const heading = document.createElement("div");
+    heading.textContent = label;
+    heading.style.cssText = "margin:0 0 6px;color:#8b95a7;font-size:13px;font-weight:600;";
 
-          setTimeout(() => {
-            pill.textContent = line;
-            pill.style.borderColor = "#2e364b";
-            pill.style.background = "#181f2d";
-          }, 900);
-        });
+    const box = document.createElement("button");
+    box.textContent = text;
+    box.className = "pillCopy";
+    box.style.cssText =
+      "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:10px;padding:12px;color:#e8ecf1;cursor:pointer;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;";
 
-        outputs.appendChild(pill);
-      });
+    box.addEventListener("click", () => {
+      navigator.clipboard.writeText(text);
+      const originalText = box.textContent;
+      box.style.borderColor = "#6ee7ff";
+      box.style.background = "#112030";
+      box.textContent = "Copied ✓";
+
+      setTimeout(() => {
+        box.textContent = originalText;
+        box.style.borderColor = "#2e364b";
+        box.style.background = "#181f2d";
+      }, 900);
+    });
+
+    wrap.appendChild(heading);
+    wrap.appendChild(box);
+    outputs.appendChild(wrap);
+  }
+
+  if (titleText) {
+    createCopyBox("Title", titleText);
+  }
+
+  createCopyBox("Description", descriptionText);
+});
 
       if (!isPro) recordUse();
 
