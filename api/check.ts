@@ -44,8 +44,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       pro: !!isMember
     });
 
-  } catch (err: any) {
+   } catch (err: any) {
     console.error("CHECK API ERROR:", err);
-    return res.status(500).json({ error: err.message || "Server error" });
+
+    return res.status(500).json({
+      error: err.message || "Server error",
+      hasRedisUrl: !!process.env.UPSTASH_REDIS_REST_URL,
+      hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN
+    });
   }
-}
+
