@@ -93,7 +93,6 @@ IMPORTANT RULES:
 - Do not invent brand, size, fabric, condition, measurements, flaws, postage or authenticity.
 - Only use brand, size, condition, flaws and measurements if the seller provided them.
 - You may describe visible item type, colour, pattern, neckline, sleeve length, shape and obvious style from the image.
-- If condition is not provided, say "Condition: See photos".
 - If unsure about a visible detail, use cautious wording.
 - No emojis.
 - No quote marks around the final answer.
@@ -141,7 +140,8 @@ Details:
 
 Only include bullet lines where the detail is visible or was provided.
 Do not include Brand or Size unless the seller provided them.
-If condition was not provided, use:
+If condition was provided, do not add another condition line.
+If condition was not provided, use only:
 - Condition: See photos
 
 Then add relevant lowercase hashtags at the bottom with no heading.
@@ -166,7 +166,8 @@ Key details:
 
 Only include bullet lines where the detail is visible or was provided.
 Do not include Brand or Size unless the seller provided them.
-If condition was not provided, use:
+If condition was provided, do not add another condition line.
+If condition was not provided, use only:
 - Condition: See photos
 
 Do not include hashtags.
