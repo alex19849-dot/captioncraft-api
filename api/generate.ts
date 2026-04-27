@@ -115,7 +115,6 @@ IMPORTANT RULES:
 - Only use the details the seller gave.
 - If something is missing, leave it out.
 - Mention flaws clearly if the seller gives flaws.
-- If condition is unclear, say "Condition: See photos" instead of inventing.
 - Keep wording simple and natural.
 - No emojis.
 - No quote marks around the final answer.
