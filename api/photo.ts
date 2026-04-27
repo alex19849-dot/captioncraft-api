@@ -43,15 +43,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { imageBase64, platform, style, desc } = (req.body || {}) as {
+    const { imageBase64, imageBase64s, platform, style, desc } = (req.body || {}) as {
       imageBase64?: string;
+      imageBase64s?: string[];
       platform?: string;
       style?: string;
       desc?: string;
     };
 
-    if (!imageBase64 || typeof imageBase64 !== "string") {
-      return res.status(400).json({ error: "Missing imageBase64" });
+    const images =
+      Array.isArray(imageBase64s) && imageBase64s.length
+        ? imageBase64s.slice(0, 6)
+        : imageBase64
+          ? [imageBase64]
+          : [];
+
+    if (!images.length) {
+      return res.status(400).json({ error: "Missing imageBase64s" });
     }
 
     const platformValue = coercePlatform(platform);
@@ -62,6 +70,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 You are PostPoet, a UK resale listing assistant for Vinted and eBay sellers.
 
 Write clear, honest, useful resale listings that sound like a real UK seller.
+
+You may use multiple uploaded photos to understand the item better, such as front, back, labels, close-ups, flaws, measurements or details.
 
 ABSOLUTELY BANNED WORDS:
 - elevate
@@ -78,17 +88,18 @@ ABSOLUTELY BANNED WORDS:
 - boasts
 
 RULES:
-- Use UK spelling
-- Do not sound like AI
-- Do not overhype
-- Do not invent details
-- Do not guess brand, size, fabric, condition, measurements, flaws or authenticity
-- Only use seller provided details for brand, size, condition and flaws
-- You may describe visible colour, cut, neckline, sleeve type, shape and obvious style from the photo
-- If unsure, be cautious
-- No emojis
-- No markdown
-- Return one finished listing only
+- Use UK spelling.
+- Do not sound like AI.
+- Do not overhype.
+- Do not invent details.
+- Do not guess brand, size, fabric, condition, measurements, flaws or authenticity.
+- Only use seller provided details for brand, size, condition and flaws unless clearly visible in a label/photo.
+- You may describe visible colour, cut, neckline, sleeve type, shape, pattern and obvious style from the photos.
+- If a label is visible, you may use the visible brand, size or fabric from that label.
+- If unsure, be cautious.
+- No emojis.
+- No markdown.
+- Return one finished listing only.
 `.trim();
 
     const platformInstruction =
@@ -100,7 +111,7 @@ VINTED TITLE:
 Brand Item Colour Size
 
 DESCRIPTION:
-Write a polished, professional resale description using the photo and seller details. Make it detailed enough to help a buyer decide, but keep it factual and natural.
+Write a polished, professional resale description using the uploaded photos and seller details. Make it detailed enough to help a buyer decide, but keep it factual and natural.
 
 Details:
 - Brand:
@@ -112,8 +123,8 @@ Details:
 - Flaws:
 
 Only include bullet lines where details are visible or were provided.
-Do not include Brand unless provided.
-Do not include Size unless provided.
+Do not include Brand unless provided or clearly visible on a label.
+Do not include Size unless provided or clearly visible on a label.
 If condition was provided, do not add another condition line.
 If condition was not provided, use only:
 - Condition: See photos
@@ -127,7 +138,7 @@ EBAY TITLE:
 Write one keyword-rich title under 80 characters.
 
 DESCRIPTION:
-Write a polished, professional resale description using the photo and seller details. Keep it factual and useful.
+Write a polished, professional resale description using the uploaded photos and seller details. Keep it factual and useful.
 
 Key details:
 - Brand:
@@ -139,8 +150,8 @@ Key details:
 - Flaws:
 
 Only include bullet lines where details are visible or were provided.
-Do not include Brand unless provided.
-Do not include Size unless provided.
+Do not include Brand unless provided or clearly visible on a label.
+Do not include Size unless provided or clearly visible on a label.
 If condition was provided, do not add another condition line.
 If condition was not provided, use only:
 - Condition: See photos
@@ -151,6 +162,7 @@ Do not include hashtags.
     const userPrompt = `
 Platform: ${platformValue}
 Listing type: ${styleValue}
+Number of uploaded photos: ${images.length}
 
 Seller notes:
 ${descValue || "No extra details provided"}
@@ -161,21 +173,21 @@ Write the finished listing now.
     const completion = await client.chat.completions.create({
       model: "gpt-4o",
       temperature: 0.2,
-      max_tokens: 900,
+      max_tokens: 1000,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "system", content: platformInstruction },
         {
           role: "user",
           content: [
-            {
-              type: "image_url",
+            ...images.map((img) => ({
+              type: "image_url" as const,
               image_url: {
-                url: `data:image/jpeg;base64,${imageBase64}`,
+                url: `data:image/jpeg;base64,${img}`,
               },
-            },
+            })),
             {
-              type: "text",
+              type: "text" as const,
               text: userPrompt,
             },
           ],
@@ -201,7 +213,8 @@ Write the finished listing now.
       captions: [listing],
       platform: platformValue,
       style: styleValue,
-      promptVersion: "v2.1.1-photo-fixed",
+      photoCount: images.length,
+      promptVersion: "v2.2.0-photo-multi-image",
     });
   } catch (err: any) {
     console.error("PHOTO API ERROR:", err);
