@@ -1,14 +1,21 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { Redis } from "@upstash/redis";
+
+const redis = new Redis({
+  url: (process.env.UPSTASH_REDIS_REST_URL || "").trim(),
+  token: (process.env.UPSTASH_REDIS_REST_TOKEN || "").trim(),
+});
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const allowedOrigins = [
     "https://postpoet.vercel.app",
     "https://postpoet.co.uk",
     "https://www.postpoet.co.uk",
-    "http://localhost:3000"
+    "http://localhost:3000",
   ];
 
   const origin = req.headers.origin as string | undefined;
+
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
@@ -21,35 +28,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).end();
   }
 
-  try {
-    const url = (process.env.UPSTASH_REDIS_REST_URL || "").trim();
-    const token = (process.env.UPSTASH_REDIS_REST_TOKEN || "").trim();
+  if (req.method !== "GET" && req.method !== "POST") {
+    return res.status(405).json({ error: "GET or POST only" });
+  }
 
-    const test = await fetch(`${url}/ping`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+  try {
+    const email =
+      req.method === "POST"
+        ? (req.body?.email || "").toString().trim().toLowerCase()
+        : ((req.query.email as string | undefined) || "").trim().toLowerCase();
+
+    if (!email) {
+      return res.status(400).json({ error: "Missing email." });
+    }
+
+    const isMember = await redis.sismember("pro_users", email);
+
+    return res.status(200).json({
+      email,
+      pro: !!isMember,
+      checked: true,
+      promptVersion: "check-v2-clean",
     });
 
-    const text = await test.text();
-
-    const rawUrl = (process.env.UPSTASH_REDIS_REST_URL || "").trim();
-
-return res.status(500).json({
-  error: err.message || "Server error",
-  hasRedisUrl: !!rawUrl,
-  hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN,
-  urlStartsWithHttps: rawUrl.startsWith("https://"),
-  urlLength: rawUrl.length,
-  urlPreview: rawUrl.slice(0, 30)
-});
-
   } catch (err: any) {
+    console.error("CHECK API ERROR:", err);
+
     return res.status(500).json({
-      error: err.message || "Server error",
+      error: err?.message || "Server error",
+      checked: false,
       hasRedisUrl: !!process.env.UPSTASH_REDIS_REST_URL,
-      hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN
+      hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN,
+      promptVersion: "check-v2-clean",
     });
   }
 }
