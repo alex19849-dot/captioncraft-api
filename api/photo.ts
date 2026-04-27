@@ -2,40 +2,30 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import OpenAI from "openai";
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY!,
 });
 
-// Style meta, similar to your text endpoint
-const STYLE_META = {
-  short:  { min: 80,  max: 140, hashtagMin: 3, hashtagMax: 7 },
-  medium: { min: 140, max: 260, hashtagMin: 3, hashtagMax: 7 },
-  long:   { min: 260, max: 550, hashtagMin: 3, hashtagMax: 7 }
-} as const;
+type PlatformKey = "vinted" | "ebay";
+type StyleKey = "standard" | "detailed" | "bundle";
 
-const LIFESTYLE_TONES = [
-  "witty",
-  "bold",
-  "laid-back",
-  "flirty",
-  "sarcastic",
-  "luxury",
-  "motivational",
-  "empathetic supportive",
-  "melancholic reflective",
-  "dark humour",
-  "savage roast"
-];
+function coercePlatform(v: unknown): PlatformKey {
+  return v === "ebay" ? "ebay" : "vinted";
+}
+
+function coerceStyle(v: unknown): StyleKey {
+  return v === "detailed" || v === "bundle" ? v : "standard";
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS SUPPORT MULTIPLE ORIGINS
   const allowedOrigins = [
     "https://postpoet.vercel.app",
     "https://postpoet.co.uk",
     "https://www.postpoet.co.uk",
-    "http://localhost:3000"
+    "http://localhost:3000",
   ];
 
   const origin = req.headers.origin as string | undefined;
+
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
   }
@@ -53,9 +43,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { imageBase64, tone, style, desc } = (req.body || {}) as {
+    const { imageBase64, platform, style, desc } = (req.body || {}) as {
       imageBase64?: string;
-      tone?: string;
+      platform?: string;
       style?: string;
       desc?: string;
     };
@@ -64,119 +54,185 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Missing imageBase64" });
     }
 
-    const toneRaw  = (tone  || "").trim();
-    const styleRaw = (style || "").trim();
+    const platformValue = coercePlatform(platform);
+    const styleValue = coerceStyle(style);
     const descValue = (desc || "").trim();
 
-    const toneValue =
-      toneRaw ||
-      "Product selling direct";
+    const systemPrompt = `
+You are PostPoet, a UK resale listing assistant for Vinted and eBay sellers.
 
+You write clear, honest resale listings based on:
+1. What you can see in the uploaded photo.
+2. Any extra seller details provided.
 
-    // Normalise style
-    const styleKey = styleRaw.toLowerCase();
-    let styleValue: "short" | "medium" | "long";
-    if (styleKey.includes("short")) {
-      styleValue = "short";
-    } else if (styleKey.includes("long") || styleKey.includes("story")) {
-      styleValue = "long";
-    } else {
-      styleValue = "medium";
-    }
+Your writing must sound like a real UK seller, not AI and not a brand advert.
 
-    const t = STYLE_META[styleValue];
+ABSOLUTELY BANNED WORDS AND PHRASES:
+- elevate
+- stunning
+- must-have
+- perfect for any occasion
+- timeless
+- chic
+- effortlessly
+- stylish addition
+- wardrobe staple
+- add to your wardrobe
+- beautiful piece
+- don't miss out
+- grab yourself
+- eye-catching
+- sophisticated
+- exudes
+- boasts
+- crafted to perfection
 
-    // Base behaviour copied from your text prompt, but for image + desc
-    const basePrompt = `
-You are PostPoet, an Urban Creator Street Smart caption-writer for social media. 
-Your writing is confident, clean, premium, culturally aware. PG-13 only.
+IMPORTANT RULES:
+- Use UK spelling.
+- Do not overhype.
+- Do not invent brand, size, fabric, condition, measurements, flaws, postage or authenticity.
+- Only use brand, size, condition, flaws and measurements if the seller provided them.
+- You may describe visible item type, colour, pattern, neckline, sleeve length, shape and obvious style from the image.
+- If condition is not provided, say "Condition: See photos".
+- If unsure about a visible detail, use cautious wording.
+- No emojis.
+- No quote marks around the final answer.
+- No markdown code blocks.
+- Return one finished listing only.
 
-You are generating captions based on:
-1. What you SEE in the uploaded image
-2. Extra user description: "${descValue}"
-Blend both naturally.
-Combine the visual info from the image with this user description naturally:
-"${descValue}"
-The description MUST influence the caption. Do not ignore it.
+PHOTO RULE:
+Use the photo to identify visible details, but do not pretend certainty about hidden details like label, exact size, fabric, brand or condition unless the seller wrote it.
 
-Tone: ${toneValue}
-Length style: ${styleValue}
+VINTED HASHTAG RULES:
+- Add hashtags at the bottom.
+- Do not write the word "hashtags".
+- Use 8 to 14 relevant hashtags.
+- Hashtags must be lowercase.
+- Include brand hashtag only if brand was provided.
+- Include size hashtag only if size was provided.
+- Avoid spam tags like #love, #fashion, #instagood.
 
-Rules:
-- Produce exactly 5 captions.
-- One caption per line, no numbering, no quotes.
-- Each caption must be a single paragraph.
-- Tone must be strong and clear in the writing style.
-- Include 3 to 7 relevant hashtags per caption.
-- Hashtags must be specific, niche + broad mixed, and match the image, the vibe and the tone.
-- Hashtags MUST be in the same paragraph, not on a new line.
-
-Length rules (STRICT):
-For each caption:
-- If style is "short", caption MUST be between 100 and 120 characters.
-- If style is "medium", caption MUST be between 200 and 250 characters.
-- If style is "long", caption MUST be between 350 and 500 characters.
-Do NOT write outside these ranges. Do NOT pad artificially.
-
-
-Special tone behaviour:
-• Product Selling Direct:
-  - Speak benefit + desirability.
-  - Light CTA allowed ("tap in", "worth a closer look").
-  - Do NOT sound desperate or corporate.
-  - Focus on how the product changes the user's day or lifestyle, not features.
-
-• Lifestyle tones (witty, sarcastic, flirty, luxury, dark humour, roast, motivational, reflective, supportive):
-  - First sentence MUST be a shareable, punchy hook.
-  - No quotes around hooks.
-  - Must feel like a screenshot-worthy one-liner.
-
-Return ONLY the 5 final captions. Nothing before or after.
-
+EBAY RULES:
+- eBay title must be under 80 characters.
+- eBay description should be keyword-rich but natural.
+- Do not use hashtags for eBay.
+- Include bullet points.
 `.trim();
-const finalPrompt = basePrompt;
+
+    const platformInstruction =
+      platformValue === "vinted"
+        ? `
+Create a Vinted listing using exactly this structure:
+
+VINTED TITLE:
+Brand Item Colour Size
+
+DESCRIPTION:
+Write 1 short natural paragraph about the item using the photo and seller details.
+
+Details:
+- Brand:
+- Size:
+- Colour:
+- Condition:
+- Style/Fit:
+- Measurements:
+- Flaws:
+
+Only include bullet lines where the detail is visible or was provided.
+Do not include Brand or Size unless the seller provided them.
+If condition was not provided, use:
+- Condition: See photos
+
+Then add relevant lowercase hashtags at the bottom with no heading.
+`.trim()
+        : `
+Create an eBay listing using exactly this structure:
+
+EBAY TITLE:
+Write one keyword-rich eBay title under 80 characters.
+
+DESCRIPTION:
+Write a clear factual paragraph using the photo and seller details.
+
+Key details:
+- Brand:
+- Size:
+- Colour:
+- Condition:
+- Style/Fit:
+- Measurements:
+- Flaws:
+
+Only include bullet lines where the detail is visible or was provided.
+Do not include Brand or Size unless the seller provided them.
+If condition was not provided, use:
+- Condition: See photos
+
+Do not include hashtags.
+`.trim();
+
+    const userPrompt = `
+Platform: ${platformValue}
+Listing type: ${styleValue}
+
+Extra seller details:
+${descValue || "No extra details provided."}
+
+Write the finished listing now.
+`.trim();
 
     const completion = await client.chat.completions.create({
-     model: "gpt-4o-mini",
-      temperature: 0.9,
+      model: "gpt-4o",
+      temperature: 0.25,
+      max_tokens: 900,
       messages: [
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        {
+          role: "system",
+          content: platformInstruction,
+        },
         {
           role: "user",
           content: [
             {
               type: "image_url",
               image_url: {
-                url: `data:image/jpeg;base64,${imageBase64}`
-              }
+                url: `data:image/jpeg;base64,${imageBase64}`,
+              },
             },
             {
               type: "text",
-              text: finalPrompt
-            }
-          ]
-        }
-      ]
+              text: userPrompt,
+            },
+          ],
+        },
+      ],
     });
 
-    let raw = completion.choices?.[0]?.message?.content || "";
+    const rawText = completion.choices?.[0]?.message?.content?.trim() || "";
 
-    if (typeof raw !== "string") {
-      raw = String(raw ?? "");
+    const listing = rawText
+      .replace(/^```html\s*/i, "")
+      .replace(/^```text\s*/i, "")
+      .replace(/^```\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
+
+    if (!listing) {
+      return res.status(500).json({ error: "No listing generated" });
     }
 
-    raw = raw.replace(/^"+|"+$/g, "").trim();
-
-    const captions = raw
-      .split("\n")
-      .map(line => line.trim())
-      .filter(line => line.length > 0);
-
-    if (!captions.length) {
-      return res.status(500).json({ error: "No captions generated" });
-    }
-
-    return res.status(200).json({ captions });
-
+    return res.status(200).json({
+      listings: [listing],
+      captions: [listing],
+      platform: platformValue,
+      style: styleValue,
+      promptVersion: "v2.0.0-photo-listings-only",
+    });
   } catch (err: any) {
     console.error("PHOTO API ERROR:", err);
     return res.status(500).json({ error: err.message || "Server error" });
