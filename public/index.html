@@ -488,103 +488,106 @@
     if (micBtn) micBtn.title = "Speech to text not supported in this browser";
   }
 
-  /* =============== GENERATE LISTINGS =============== */
-  generateBtn.addEventListener("click", async () => {
-    const desc     = (descEl.value || "").trim();
-    const platform = platformEl.value;
-    const style    = (document.getElementById("style")?.value) || "standard";
+/* =============== GENERATE LISTINGS =============== */
+generateBtn.addEventListener("click", async () => {
+  const desc = (descEl.value || "").trim();
+  const platform = platformEl.value;
+  const style = "detailed";
 
-    if (!uploadedPhotoBase64 && !desc) {
-      alert("Add item details or upload a photo first.");
+  if (!uploadedPhotoBase64 && !desc) {
+    alert("Add item details or upload a photo first.");
+    return;
+  }
+
+  if (!isPro && !canUse()) {
+    alert("You’ve used your free listings today. Go Pro for unlimited.");
+    return;
+  }
+
+  outputs.innerHTML = "<div class='out'>Generating your listing…</div>";
+
+  try {
+    let r;
+
+    if (uploadedPhotoBase64) {
+      r = await fetch(PHOTO_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: uploadedPhotoBase64,
+          desc,
+          platform,
+          style,
+          email
+        })
+      });
+    } else {
+      r = await fetch(GENERATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          desc,
+          platform,
+          style,
+          email
+        })
+      });
+    }
+
+    if (!r.ok) {
+      const t = await r.text();
+      throw new Error(`API ${r.status}: ${t}`);
+    }
+
+    const data = await r.json();
+    const listings = data.listings || data.captions || data.results || [];
+
+    outputs.innerHTML = "";
+
+    if (!listings.length) {
+      outputs.innerHTML = "<div class='out'>No listing came back. Backend needs checking.</div>";
       return;
     }
 
-    if (!isPro && !canUse()) {
-      alert("You’ve used your free listings today. Go Pro for unlimited.");
-      return;
-    }
+    listings.forEach(line => {
+      const pill = document.createElement("button");
 
-    outputs.innerHTML = "<div class='out'>Generating your listing…</div>";
+      pill.textContent = line;
+      pill.className = "pillCopy";
+      pill.style.cssText =
+        "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
 
-    try {
-      let r;
+      pill.style.whiteSpace = "pre-wrap";
+      pill.style.wordBreak = "break-word";
 
-      if (uploadedPhotoBase64) {
-        r = await fetch(PHOTO_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            imageBase64: uploadedPhotoBase64,
-            desc,
-            platform,
-            style,
-            email
-          })
-        });
-      } else {
-        r = await fetch(GENERATE_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            desc,
-            platform,
-            style,
-            email
-          })
-        });
-      }
+      pill.addEventListener("click", () => {
+        navigator.clipboard.writeText(line);
+        pill.style.borderColor = "#6ee7ff";
+        pill.style.background = "#112030";
+        pill.textContent = "Copied ✓";
 
-      if (!r.ok) {
-        const t = await r.text();
-        throw new Error(`API ${r.status}: ${t}`);
-      }
-
-      const data = await r.json();
-      const listings = data.listings || data.captions || data.results || [];
-
-      outputs.innerHTML = "";
-
-      if (!listings.length) {
-        outputs.innerHTML = "<div class='out'>No listing came back. Backend needs checking.</div>";
-        return;
-      }
-
-      listings.forEach(line => {
-        const pill = document.createElement("button");
-
-        pill.textContent = line;
-        pill.className = "pillCopy";
-        pill.style.cssText =
-          "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:8px;padding:10px;margin-bottom:8px;color:#e8ecf1;cursor:pointer;font-size:14px;";
-
-        pill.style.whiteSpace = "pre-wrap";
-        pill.style.wordBreak = "break-word";
-
-        pill.addEventListener("click", () => {
-          navigator.clipboard.writeText(line);
-          pill.style.borderColor = "#6ee7ff";
-          pill.style.background = "#112030";
-          pill.textContent = "Copied ✓";
-
-          setTimeout(() => {
-            pill.textContent = line;
-            pill.style.borderColor = "#2e364b";
-            pill.style.background = "#181f2d";
-          }, 900);
-        });
-
-        outputs.appendChild(pill);
+        setTimeout(() => {
+          pill.textContent = line;
+          pill.style.borderColor = "#2e364b";
+          pill.style.background = "#181f2d";
+        }, 900);
       });
 
-      if (!isPro) recordUse();
+      outputs.appendChild(pill);
+    });
 
-    } catch (e) {
-      outputs.innerHTML =
-        `<div class="out" style="color:#ff6b6b">Error: ${e.message || "Request failed"}</div>`;
-      console.error(e);
-    }
-  });
+    if (!isPro) recordUse();
 
+    uploadedPhotoBase64 = null;
+    hiddenPhotoInput.value = "";
+    if (photoBtn) photoBtn.textContent = "Upload Photo";
+
+  } catch (e) {
+    outputs.innerHTML =
+      `<div class="out" style="color:#ff6b6b">Error: ${e.message || "Request failed"}</div>`;
+    console.error(e);
+  }
+});
   /* =============== NAV =============== */
   if (goProBtn) {
     goProBtn.addEventListener("click", () => {
