@@ -6,103 +6,211 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
+    :root{
+      --bg:#0f1115;
+      --card:#171a21;
+      --muted:#8b95a7;
+      --line:#2f3852;
+      --text:#e8ecf1;
+      --accent:#67d8f4;
+    }
+
+    *{box-sizing:border-box}
+
     body{
-      background:#0f1115;
-      color:#e8ecf1;
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
       font-family:system-ui,sans-serif;
-      max-width:800px;
+      line-height:1.7;
+      padding:54px 18px;
+    }
+
+    .page{
+      max-width:780px;
       margin:0 auto;
-      padding:60px 20px;
-      text-align:center;
-      line-height:1.6;
     }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:30px;
+      box-shadow:0 10px 36px rgba(0,0,0,.35);
+    }
+
     h1{
-      color:#6ee7ff;
-      margin-bottom:30px;
-      font-size:28px;
+      color:var(--accent);
+      text-align:center;
+      margin:0 0 10px;
+      font-size:32px;
     }
-    h2 {
-  color: #6ee7ff;
-  margin-top: 25px;
-  margin-bottom: 10px;
-  font-size: 22px;
-}
+
+    .intro{
+      text-align:center;
+      color:var(--muted);
+      margin:0 0 28px;
+      font-size:15px;
+    }
+
+    h2{
+      color:var(--accent);
+      font-size:18px;
+      margin:28px 0 10px;
+    }
 
     p{
-      margin-bottom:20px;
+      margin:0 0 16px;
+      color:var(--muted);
+      font-size:15px;
     }
 
-    /* HOME ICON TOP-LEFT */
-    .home-btn {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      z-index: 9999;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 26px;
-      height: 26px;
-      padding: 0;
-      margin: 0;
-      background: none;
-      border: none;
-      text-decoration: none;
-      cursor: pointer;
+    strong{
+      color:var(--text);
     }
 
-    .home-btn svg {
-      width: 20px !important;
-      height: 20px !important;
-      fill: #67d8f4 !important;
-      display: block;
+    a{
+      color:var(--accent);
+      text-decoration:none;
     }
 
-    .home-btn:hover svg {
-      fill: #54c7e2 !important;
+    a:hover{
+      text-decoration:underline;
+    }
+
+    .home-btn{
+      position:fixed;
+      top:15px;
+      left:15px;
+      z-index:9999;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:28px;
+      height:28px;
+      background:none;
+      border:none;
+      padding:0;
+      text-decoration:none;
+      cursor:pointer;
+    }
+
+    .home-btn svg{
+      width:22px;
+      height:22px;
+      fill:var(--accent);
+      display:block;
+    }
+
+    .home-btn:hover svg{
+      fill:#54c7e2;
+    }
+
+    @media(max-width:540px){
+      body{
+        padding:44px 14px;
+      }
+
+      .card{
+        padding:22px;
+      }
+
+      h1{
+        font-size:28px;
+      }
+
+      h2{
+        font-size:16px;
+      }
+
+      p{
+        font-size:14px;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <!-- HOME ICON -->
-  <a href="/" class="home-btn">
+  <a href="/" class="home-btn" aria-label="Back to home">
     <svg viewBox="0 0 24 24">
       <path d="M3 10.5L12 3l9 7.5v10.5a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5V15h-3v6a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 3 21V10.5z"/>
     </svg>
   </a>
 
-  <section class="legal-section">
-    <h1><strong>Terms of Use</strong></h1>
+  <main class="page">
+    <div class="card">
+      <h1>Terms of Use</h1>
+      <p class="intro">Last updated: April 2026</p>
 
-    <p><strong>Effective Date:</strong> 14 Nov 2025</p>
-    <p><strong>Owner:</strong> Alexandra Davies (PostPoet)</p>
-    <p><strong>Contact:</strong> <a href="mailto:postpoet.info@gmail.com">postpoet.info@gmail.com</a></p>
+      <p><strong>Owner:</strong> Alexandra Davies, trading as PostPoet</p>
+      <p><strong>Contact:</strong> <a href="mailto:postpoet.info@gmail.com">postpoet.info@gmail.com</a></p>
 
-    <h2><strong>1. Service Description</strong></h2>
-    <p>PostPoet generates text based on the descriptions, speech input or images you provide. You are responsible for reviewing generated content before publishing it. We do not guarantee sales results, engagement performance or moderation approval on any platform.</p>
+      <h2>1. What PostPoet Does</h2>
+      <p>
+        PostPoet is an AI powered listing assistant designed to help users create resale listings for platforms such as Vinted and eBay. The service may generate titles, descriptions, hashtags and listing copy based on text input, voice input and uploaded images.
+      </p>
 
-    <h2><strong>2. Acceptable Use</strong></h2>
-    <p>PostPoet may not be used to generate explicit sexual content, hate speech, harassment, illegal content or abusive material. All outputs are PG-13.</p>
+      <h2>2. Your Responsibility</h2>
+      <p>
+        You are responsible for checking all generated content before publishing it. This includes checking item descriptions, sizes, brand names, measurements, condition details and platform compliance. AI can make mistakes, humans famously do too, so always review before posting.
+      </p>
 
-    <h2><strong>3. Ownership</strong></h2>
-    <p>You own the rights to the captions generated for you. PostPoet does not claim ownership over your images, descriptions or generated text.</p>
+      <h2>3. Uploaded Photos and Content</h2>
+      <p>
+        You must only upload content you own or have permission to use. You remain the owner of your uploaded images, text and generated listing content.
+      </p>
+      <p>
+        PostPoet does not claim ownership over your listings, item photos or written descriptions.
+      </p>
 
-    <h2><strong>4. Free and Pro Plans</strong></h2>
-    <p>The free plan includes <strong>5 caption generations per day</strong>. The Pro plan removes limits. Pricing may change in the future.</p>
+      <h2>4. Acceptable Use</h2>
+      <p>
+        You may not use PostPoet to create unlawful, fraudulent, abusive, hateful, defamatory or misleading content, including fake branded listings, counterfeit goods listings or intentionally deceptive product descriptions.
+      </p>
 
-    <h2><strong>5. Liability</strong></h2>
-    <p>PostPoet is not liable for moderation issues, denied listings, lost revenue or any damages resulting from the use or misuse of AI generated captions. You are responsible for what you post.</p>
+      <h2>5. Free and Pro Access</h2>
+      <p>
+        Free accounts include limited daily generations. Pro subscriptions unlock expanded usage and premium tools, including advanced photo based listing generation.
+      </p>
+      <p>
+        Subscription pricing, features and limits may change over time as the service develops.
+      </p>
 
-    <h2><strong>6. Service Changes</strong></h2>
-    <p>We may update or modify features, limitations or behaviour at any time to improve the service.</p>
+      <h2>6. Billing</h2>
+      <p>
+        Paid subscriptions are processed securely through Stripe. Billing, renewals, cancellations and payment methods are managed through Stripe's billing portal.
+      </p>
+      <p>
+        Where required by law, eligible refunds will be handled fairly and reasonably.
+      </p>
 
-    <h2><strong>7. Contact</strong></h2>
-    <p>For support or data removal: <strong>postpoet.info@gmail.com</strong></p>
+      <h2>7. Service Availability</h2>
+      <p>
+        We aim to keep PostPoet available and reliable, but uninterrupted access cannot be guaranteed. Features may be updated, improved, changed or removed without notice.
+      </p>
 
-    <p>By continuing to use PostPoet, you agree to these terms.</p>
-  </section>
+      <h2>8. No Guarantee of Results</h2>
+      <p>
+        PostPoet helps you write better listings, but we do not guarantee sales, views, engagement or marketplace approval. A good listing helps, but the internet remains gloriously chaotic.
+      </p>
+
+      <h2>9. Limitation of Liability</h2>
+      <p>
+        PostPoet is not liable for listing removals, moderation issues, lost sales, account actions, incorrect generated details, business interruption or indirect losses arising from use of the service.
+      </p>
+
+      <h2>10. Updates to These Terms</h2>
+      <p>
+        These terms may be updated from time to time. Continued use of PostPoet means you accept the latest version.
+      </p>
+
+      <h2>11. Contact</h2>
+      <p>
+        Questions, support requests or account issues can be sent to <strong>postpoet.info@gmail.com</strong>
+      </p>
+    </div>
+  </main>
 
 </body>
 </html>
