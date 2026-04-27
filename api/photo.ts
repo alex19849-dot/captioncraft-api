@@ -6,16 +6,16 @@ const client = new OpenAI({
 });
 
 type PlatformKey = "vinted" | "ebay";
-type StyleKey = "standard" | "detailed" | "bundle";
+type StyleKey = "detailed";
 
 function coercePlatform(v: unknown): PlatformKey {
   return v === "ebay" ? "ebay" : "vinted";
 }
 
-function coerceStyle(v: unknown): StyleKey {
-  return v === "detailed" || v === "bundle" ? v : "standard";
-}
 
+function coerceStyle(v: unknown): StyleKey {
+  return "detailed";
+}
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const allowedOrigins = [
     "https://postpoet.vercel.app",
