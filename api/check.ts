@@ -34,13 +34,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const text = await test.text();
 
-    return res.status(200).json({
-      ok: test.ok,
-      status: test.status,
-      response: text,
-      hasRedisUrl: !!url,
-      hasRedisToken: !!token
-    });
+    const rawUrl = (process.env.UPSTASH_REDIS_REST_URL || "").trim();
+
+return res.status(500).json({
+  error: err.message || "Server error",
+  hasRedisUrl: !!rawUrl,
+  hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN,
+  urlStartsWithHttps: rawUrl.startsWith("https://"),
+  urlLength: rawUrl.length,
+  urlPreview: rawUrl.slice(0, 30)
+});
 
   } catch (err: any) {
     return res.status(500).json({
