@@ -1,10 +1,4 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { Redis } from "@upstash/redis";
-
-const redis = new Redis({
-  url: (process.env.UPSTASH_REDIS_REST_URL || "").trim(),
-  token: (process.env.UPSTASH_REDIS_REST_TOKEN || "").trim(),
-});
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const allowedOrigins = [
@@ -42,13 +36,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Missing email." });
     }
 
-    const isMember = await redis.sismember("pro_users", email);
+    const redisUrl = (process.env.UPSTASH_REDIS_REST_URL || "").trim();
+    const redisToken = (process.env.UPSTASH_REDIS_REST_TOKEN || "").trim();
+
+    if (!redisUrl || !redisToken) {
+      return res.status(500).json({
+        error: "Redis config missing",
+        pro: false,
+      });
+    }
+
+    const redisResponse = await fetch(`${redisUrl}/sismember/pro_users/${encodeURIComponent(email)}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${redisToken}`,
+      },
+    });
+
+    if (!redisResponse.ok) {
+      return res.status(500).json({
+        error: "Redis request failed",
+        status: redisResponse.status,
+        pro: false,
+      });
+    }
+
+    const data = await redisResponse.json();
+
+    const result = Array.isArray(data.result) ? data.result[0] : data.result;
+    const isPro = result === 1 || result === "1" || result === true;
 
     return res.status(200).json({
       email,
-      pro: !!isMember,
+      pro: isPro,
       checked: true,
-      promptVersion: "check-v2-clean",
+      promptVersion: "check-v3-rest-direct",
     });
 
   } catch (err: any) {
@@ -56,10 +78,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.status(500).json({
       error: err?.message || "Server error",
+      pro: false,
       checked: false,
-      hasRedisUrl: !!process.env.UPSTASH_REDIS_REST_URL,
-      hasRedisToken: !!process.env.UPSTASH_REDIS_REST_TOKEN,
-      promptVersion: "check-v2-clean",
+      promptVersion: "check-v3-rest-direct",
     });
   }
 }
