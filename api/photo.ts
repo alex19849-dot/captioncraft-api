@@ -128,7 +128,7 @@ VINTED TITLE:
 Brand Item Colour Size
 
 DESCRIPTION:
-Write 1 short natural paragraph about the item using the photo and seller details.
+Write a polished, professional resale description using the photo and seller details. Make it detailed enough to help a buyer decide, but keep it factual and natural.
 
 Details:
 - Brand:
@@ -153,7 +153,7 @@ EBAY TITLE:
 Write one keyword-rich eBay title under 80 characters.
 
 DESCRIPTION:
-Write a clear factual paragraph using the photo and seller details.
+Write a polished, professional resale description using the photo and seller details. Keep it keyword-rich, factual and useful for buyers.
 
 Key details:
 - Brand:
