@@ -139,36 +139,26 @@ EBAY RULES:
 - Do not use hashtags for eBay.
 - Include clear bullet points.
 
-STYLE RULES:
-Standard Listing:
-- Clear title.
-- Short useful description.
-- Key details.
-- Condition.
-
-Detailed Listing:
-- More complete description.
-- Include measurements section only if measurements were provided.
-- Include flaws section only if flaws were provided.
-- Still no waffle.
-
-Bundle Listing:
-- Write as a bundle/listing for multiple items.
-- Mention number of items only if the seller gave it.
-- Keep it clear and practical.
-`.trim();
-
+LISTING QUALITY RULES:
+- Write a polished, professional resale listing.
+- Make it detailed enough to help a buyer decide.
+- Keep it factual, natural and easy to read.
+- Use clear sections.
+- Include measurements only if provided.
+- Include flaws only if provided.
+- If it is a bundle, write it naturally as a bundle based on the seller details.
+- Avoid filler, hype and vague AI wording.
+- Prioritise useful buyer information over sales language.
     const platformInstruction =
       platform === "vinted"
-        ? `
+     
 Create a Vinted listing using exactly this structure:
 
 VINTED TITLE:
 Brand Item Colour Size
 
 DESCRIPTION:
-Write 1 short natural paragraph about the item.
-
+Write a polished, professional resale description using the photo and seller details. Make it detailed enough to help a buyer decide, but keep it factual and natural.
 Details:
 - Brand:
 - Size:
@@ -176,6 +166,7 @@ Details:
 - Condition:
 - Style/Fit:
 - Measurements:
+- Flaws:
 
 Only include bullet lines where the detail was actually provided.
 If condition was not provided, use:
@@ -190,7 +181,7 @@ EBAY TITLE:
 Write one keyword-rich eBay title under 80 characters.
 
 DESCRIPTION:
-Write a clear factual paragraph.
+Write a polished, professional resale description using the photo and seller details. Keep it keyword-rich, factual and useful for buyers.
 
 Key details:
 - Brand:
@@ -247,7 +238,7 @@ Write the finished listing now.
       pro: isPro,
       platform,
       style,
-      promptVersion: "v2.0.0-listings-only",
+      promptVersion: "v2.1.0-detailed-listings-only",
     });
   } catch (e: any) {
     console.error("generate error:", e);
