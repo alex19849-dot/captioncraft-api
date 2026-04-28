@@ -1,11 +1,5 @@
-import { Redis } from "@upstash/redis";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import OpenAI from "openai";
-
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 
@@ -59,23 +53,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           })();
 
     const desc = (body.desc ?? "").toString().trim();
-    const email = (body.email ?? "").toString().trim();
     const platform = coercePlatform(body.platform);
     const style = coerceStyle(body.style);
 
     if (!desc) {
       return res.status(400).json({ error: "Item details required" });
-    }
-
-    let isPro = false;
-
-    if (email) {
-      try {
-        const exists = await redis.sismember("pro_users", email);
-        isPro = String(exists) === "1";
-      } catch (e) {
-        console.error("Redis error:", e);
-      }
     }
 
     const systemPrompt = `
@@ -239,10 +221,10 @@ Write the finished listing now.
     return res.status(200).json({
       listings: [listing],
       captions: [listing],
-      pro: isPro,
+      pro: false,
       platform,
       style,
-      promptVersion: "v2.1.1-generate-fixed",
+      promptVersion: "v2.1.2-generate-no-redis",
     });
   } catch (e: any) {
     console.error("generate error:", e);
