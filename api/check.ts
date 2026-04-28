@@ -37,13 +37,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // CHECK IF USER IS PRO
-    const isMember = await redis.sismember("pro_users", email);
+    const ping = await redis.ping();
 
-    return res.status(200).json({
-      email,
-      pro: !!isMember
-    });
-
+return res.status(200).json({
+  ping
+});
   } catch (err: any) {
     console.error("CHECK API ERROR:", err);
     return res.status(500).json({ error: err.message || "Server error" });
