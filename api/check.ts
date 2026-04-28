@@ -2,8 +2,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Redis } from "@upstash/redis";
 
 const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  url: "https://apt-wasp-88893.upstash.io",
+  token: "gQAAAAAAAVs9AAIgcDJkYWQwZjhkMzM5N2E0NWM4OWNiYjVkNDJmMGY5ZjA5OQ",
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
