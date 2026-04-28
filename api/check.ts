@@ -1,11 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { Redis } from "@upstash/redis";
 
-function cleanEnv(value: string | undefined) {
-  return (value || "")
-    .trim()
-    .replace(/^["']|["']$/g, "")
-    .replace(/\/+$/, "");
-}
+const redis = new Redis({
+  url: (process.env.UPSTASH_REDIS_REST_URL || "").trim(),
+  token: (process.env.UPSTASH_REDIS_REST_TOKEN || "").trim(),
+});
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const allowedOrigins = [
@@ -43,45 +42,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Missing email." });
     }
 
-    const redisUrl = cleanEnv(process.env.UPSTASH_REDIS_REST_URL);
-    const redisToken = cleanEnv(process.env.UPSTASH_REDIS_REST_TOKEN);
-
-    if (!redisUrl || !redisToken) {
-      return res.status(500).json({
-        error: "Redis config missing",
-        pro: false,
-        promptVersion: "check-v4-clean-rest",
-      });
-    }
-
-    const redisResponse = await fetch(redisUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${redisToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(["SISMEMBER", "pro_users", email]),
-    });
-
-    const data = await redisResponse.json();
-
-    if (!redisResponse.ok) {
-      return res.status(500).json({
-        error: "Redis request failed",
-        status: redisResponse.status,
-        details: data,
-        pro: false,
-        promptVersion: "check-v4-clean-rest",
-      });
-    }
-
-    const isPro = data.result === 1 || data.result === "1" || data.result === true;
+    const isMember = await redis.sismember("pro_users", email);
 
     return res.status(200).json({
       email,
-      pro: isPro,
+      pro: isMember === 1 || isMember === true,
       checked: true,
-      promptVersion: "check-v4-clean-rest",
+      version: "check-sdk-clean-v1",
     });
 
   } catch (err: any) {
@@ -91,7 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       error: err?.message || "Server error",
       pro: false,
       checked: false,
-      promptVersion: "check-v4-clean-rest",
+      version: "check-sdk-clean-v1",
     });
   }
 }
