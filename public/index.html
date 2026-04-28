@@ -918,7 +918,7 @@
     uploadedPhotoBase64s = [];
     outputs.innerHTML = "<div class='out'>Reading your photos…</div>";
 
-    const limitedFiles = files.slice(0, 6);
+    const limitedFiles = files.slice(0, 3);
 
     Promise.all(
       limitedFiles.map(file => {
