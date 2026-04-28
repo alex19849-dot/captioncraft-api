@@ -414,7 +414,7 @@
         <button id="photoBtn">Upload Photos</button>
 
         <p class="helper-text">
-          Add up to 3 photos: front, back, label, flaws or close-ups.
+          Add up to 6 photos: front, back, label, flaws or close-ups.
         </p>
       </div>
 
@@ -517,6 +517,15 @@
   const contactModal  = $("contactModal");
   const closeContact  = $("closeContact");
 
+  const hiddenPhotoInput = document.createElement("input");
+  hiddenPhotoInput.type = "file";
+  hiddenPhotoInput.accept = "image/*";
+  hiddenPhotoInput.multiple = true;
+  hiddenPhotoInput.style.display = "none";
+  document.body.appendChild(hiddenPhotoInput);
+
+  const photoBtn = document.getElementById("photoBtn");
+
   function getUsage(){
     const today  = new Date().toISOString().slice(0,10);
     const record = JSON.parse(localStorage.getItem("captionUsageShared") || "{}");
@@ -590,6 +599,8 @@
       });
 
       if (!r.ok) {
+        isPro = false;
+        localStorage.setItem("lastKnownPro", "false");
         applyUIForPro();
         return;
       }
@@ -601,6 +612,8 @@
 
     } catch (err) {
       console.error("refreshProStatus error", err);
+      isPro = false;
+      localStorage.setItem("lastKnownPro", "false");
       applyUIForPro();
     }
   }
@@ -734,6 +747,57 @@
     if (micBtn) micBtn.title = "Speech to text not supported in this browser";
   }
 
+  function createCopyBox(label, text) {
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "margin-bottom:12px;";
+
+    const heading = document.createElement("div");
+    heading.textContent = label;
+    heading.style.cssText = "margin:0 0 6px;color:#8b95a7;font-size:13px;font-weight:600;";
+
+    const box = document.createElement("button");
+    box.textContent = text;
+    box.className = "pillCopy";
+    box.style.cssText =
+      "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:10px;padding:12px;color:#e8ecf1;cursor:pointer;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;";
+
+    box.addEventListener("click", () => {
+      navigator.clipboard.writeText(text);
+      const originalText = box.textContent;
+      box.style.borderColor = "#6ee7ff";
+      box.style.background = "#112030";
+      box.textContent = "Copied ✓";
+
+      setTimeout(() => {
+        box.textContent = originalText;
+        box.style.borderColor = "#2e364b";
+        box.style.background = "#181f2d";
+      }, 900);
+    });
+
+    wrap.appendChild(heading);
+    wrap.appendChild(box);
+    outputs.appendChild(wrap);
+  }
+
+  function renderListings(listings) {
+    outputs.innerHTML = "";
+
+    listings.forEach(line => {
+      const titleMatch = line.match(/(?:VINTED TITLE:|EBAY TITLE:)\s*([\s\S]*?)(?:\n\s*DESCRIPTION:)/i);
+      const descriptionMatch = line.match(/DESCRIPTION:\s*([\s\S]*)/i);
+
+      const titleText = titleMatch ? titleMatch[1].trim() : "";
+      const descriptionText = descriptionMatch ? descriptionMatch[1].trim() : line.trim();
+
+      if (titleText) {
+        createCopyBox("Title", titleText);
+      }
+
+      createCopyBox("Description", descriptionText);
+    });
+  }
+
   generateBtn.addEventListener("click", async () => {
     const desc = (descEl.value || "").trim();
     const platform = platformEl.value;
@@ -787,59 +851,12 @@
       const data = await r.json();
       const listings = data.listings || data.captions || data.results || [];
 
-      outputs.innerHTML = "";
-
       if (!listings.length) {
         outputs.innerHTML = "<div class='out'>No listing came back. Backend needs checking.</div>";
         return;
       }
 
-     listings.forEach(line => {
-  const titleMatch = line.match(/(?:VINTED TITLE:|EBAY TITLE:)\s*([\s\S]*?)(?:\n\s*DESCRIPTION:)/i);
-  const descriptionMatch = line.match(/DESCRIPTION:\s*([\s\S]*)/i);
-
-  const titleText = titleMatch ? titleMatch[1].trim() : "";
-  const descriptionText = descriptionMatch ? descriptionMatch[1].trim() : line.trim();
-
-  function createCopyBox(label, text) {
-    const wrap = document.createElement("div");
-    wrap.style.cssText = "margin-bottom:12px;";
-
-    const heading = document.createElement("div");
-    heading.textContent = label;
-    heading.style.cssText = "margin:0 0 6px;color:#8b95a7;font-size:13px;font-weight:600;";
-
-    const box = document.createElement("button");
-    box.textContent = text;
-    box.className = "pillCopy";
-    box.style.cssText =
-      "display:block;width:100%;text-align:left;background:#181f2d;border:1px solid #2e364b;border-radius:10px;padding:12px;color:#e8ecf1;cursor:pointer;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;";
-
-    box.addEventListener("click", () => {
-      navigator.clipboard.writeText(text);
-      const originalText = box.textContent;
-      box.style.borderColor = "#6ee7ff";
-      box.style.background = "#112030";
-      box.textContent = "Copied ✓";
-
-      setTimeout(() => {
-        box.textContent = originalText;
-        box.style.borderColor = "#2e364b";
-        box.style.background = "#181f2d";
-      }, 900);
-    });
-
-    wrap.appendChild(heading);
-    wrap.appendChild(box);
-    outputs.appendChild(wrap);
-  }
-
-  if (titleText) {
-    createCopyBox("Title", titleText);
-  }
-
-  createCopyBox("Description", descriptionText);
-});
+      renderListings(listings);
 
       if (!isPro) recordUse();
 
@@ -890,15 +907,6 @@
     });
   }
 
-  const hiddenPhotoInput = document.createElement("input");
-  hiddenPhotoInput.type = "file";
-  hiddenPhotoInput.accept = "image/*";
-  hiddenPhotoInput.multiple = true;
-  hiddenPhotoInput.style.display = "none";
-  document.body.appendChild(hiddenPhotoInput);
-
-  const photoBtn = document.getElementById("photoBtn");
-
   if (photoBtn) {
     photoBtn.addEventListener("click", () => {
       if (!isPro) {
@@ -910,15 +918,6 @@
       hiddenPhotoInput.click();
     });
   }
-
- hiddenPhotoInput.addEventListener("change", () => {
-  const files = Array.from(hiddenPhotoInput.files || []);
-  if (!files.length) return;
-
-  uploadedPhotoBase64s = [];
-  outputs.innerHTML = "<div class='out'>Compressing your photos…</div>";
-
-  const limitedFiles = files.slice(0, 6);
 
   function compressImage(file, maxWidth = 1200, quality = 0.7) {
     return new Promise((resolve, reject) => {
@@ -962,30 +961,16 @@
     });
   }
 
-  Promise.all(limitedFiles.map(file => compressImage(file)))
-    .then(images => {
-      uploadedPhotoBase64s = images;
+  hiddenPhotoInput.addEventListener("change", () => {
+    const files = Array.from(hiddenPhotoInput.files || []);
+    if (!files.length) return;
 
-      if (photoBtn) {
-        photoBtn.textContent = `${images.length} Photo${images.length > 1 ? "s" : ""} Added ✓`;
-      }
+    uploadedPhotoBase64s = [];
+    outputs.innerHTML = "<div class='out'>Compressing your photos…</div>";
 
-      outputs.innerHTML = `
-        <div class='out' style='color:#6ee7ff'>
-          ${images.length} compressed photo${images.length > 1 ? "s" : ""} uploaded and ready. Choose platform, then hit Generate.
-        </div>`;
-    })
-    .catch(err => {
-      uploadedPhotoBase64s = [];
-      outputs.innerHTML = `<div class='out' style='color:#ff6b6b'>Error: ${err.message}</div>`;
-    });
-});
+    const limitedFiles = files.slice(0, 6);
 
-          reader.onerror = () => reject(new Error("Could not read photo"));
-          reader.readAsDataURL(file);
-        });
-      })
-    )
+    Promise.all(limitedFiles.map(file => compressImage(file)))
       .then(images => {
         uploadedPhotoBase64s = images;
 
@@ -995,7 +980,7 @@
 
         outputs.innerHTML = `
           <div class='out' style='color:#6ee7ff'>
-            ${images.length} photo${images.length > 1 ? "s" : ""} uploaded and ready. Choose platform, then hit Generate.
+            ${images.length} compressed photo${images.length > 1 ? "s" : ""} uploaded and ready. Choose platform, then hit Generate.
           </div>`;
       })
       .catch(err => {
