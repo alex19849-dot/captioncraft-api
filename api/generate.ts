@@ -114,12 +114,19 @@ HASHTAG RULES FOR VINTED:
 - Avoid spam tags like #love, #fashion, #instagood.
 
 EBAY RULES:
-- eBay title must be between 70 and 80 characters where possible.
-- Use strong searchable keywords naturally.
-- Include brand, item type, colour and size if provided.
-- Do not pad with nonsense.
-- Do not use symbols like !!! or ****.
-- Make titles feel like successful real eBay listings.
+Write one eBay title using this formula:
+
+Brand + Colour + Item Type + Key Feature + Sleeve Type + Size
+
+Rules:
+- Aim for 70 to 80 characters
+- Use natural searchable keywords
+- Include visible style words like lace, floral, midi, maxi, sheer, knit, button, zip, stretch, oversized, fitted, sleeveless, long sleeve, short sleeve where relevant
+- Include size if provided
+- No filler words
+- No punctuation spam
+- No duplicate words
+- Make it look like a strong real eBay title
 - eBay description should be keyword-rich but still natural.
 - Do not use hashtags for eBay.
 - Include clear bullet points.
@@ -134,6 +141,7 @@ LISTING QUALITY RULES:
 - If it is a bundle, write it naturally as a bundle based on the seller details.
 - Avoid filler, hype and vague AI wording.
 - Prioritise useful buyer information over sales language.
+- For eBay titles, maximise useful keywords naturally. Short titles are not acceptable unless information is genuinely limited.
 `.trim();
 
     const platformInstruction =
