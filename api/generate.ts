@@ -114,7 +114,12 @@ HASHTAG RULES FOR VINTED:
 - Avoid spam tags like #love, #fashion, #instagood.
 
 EBAY RULES:
-- eBay title must be under 80 characters.
+- eBay title must be between 70 and 80 characters where possible.
+- Use strong searchable keywords naturally.
+- Include brand, item type, colour and size if provided.
+- Do not pad with nonsense.
+- Do not use symbols like !!! or ****.
+- Make titles feel like successful real eBay listings.
 - eBay description should be keyword-rich but still natural.
 - Do not use hashtags for eBay.
 - Include clear bullet points.
@@ -162,7 +167,7 @@ Then add relevant lowercase hashtags at the bottom with no heading.
 Create an eBay listing using exactly this structure:
 
 EBAY TITLE:
-Write one keyword-rich eBay title under 80 characters.
+Write one keyword-rich eBay title between 70 and 80 characters where possible.
 
 DESCRIPTION:
 Write a polished, professional resale description using the seller details. Keep it keyword-rich, factual and useful for buyers.
