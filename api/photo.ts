@@ -135,7 +135,28 @@ Add 8 to 12 relevant lowercase hashtags at the bottom with no heading.
 Create an eBay listing in exactly this format:
 
 EBAY TITLE:
-Write one keyword-rich title under 80 characters.
+Write exactly ONE eBay title.
+
+STRICT RULES:
+- Minimum 65 characters
+- Maximum 80 characters
+- Must use as much of the 80 characters as possible naturally
+- Include Brand if provided or clearly visible on label
+- Include Colour if visible or provided
+- Include Item Type
+- Include Style / Feature words if relevant, such as lace, floral, long sleeve, stretch, oversized, fitted, midi, maxi, sheer, button, zip
+- Include Size if provided or clearly visible on label
+- Include Womens if it is womenswear
+- No filler
+- No repeated words
+- No symbols spam
+- No short titles
+
+GOOD:
+Papaya Pink Lace Sleeve Blouse Top Long Sleeve Stretch Womens Size 16
+
+BAD:
+Papaya Size 16 Pink Lace Sleeve Top
 
 DESCRIPTION:
 Write a polished, professional resale description using the uploaded photos and seller details. Keep it factual and useful.
