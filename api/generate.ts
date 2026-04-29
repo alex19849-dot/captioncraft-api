@@ -114,19 +114,29 @@ HASHTAG RULES FOR VINTED:
 - Avoid spam tags like #love, #fashion, #instagood.
 
 EBAY RULES:
-Write one eBay title using this formula:
 
-Brand + Colour + Item Type + Key Feature + Sleeve Type + Size
+Write exactly ONE eBay title.
 
-Rules:
-- Aim for 70 to 80 characters
-- Use natural searchable keywords
-- Include visible style words like lace, floral, midi, maxi, sheer, knit, button, zip, stretch, oversized, fitted, sleeveless, long sleeve, short sleeve where relevant
-- Include size if provided
-- No filler words
-- No punctuation spam
-- No duplicate words
-- Make it look like a strong real eBay title
+STRICT RULES:
+- Minimum 65 characters
+- Maximum 80 characters
+- Must use as much of the 80 characters as possible naturally
+- Include Brand if provided
+- Include Colour if provided
+- Include Item Type
+- Include Style / Feature words if relevant (lace, floral, long sleeve, stretch, oversized, fitted, midi, maxi, sheer, button, zip etc)
+- Include Size if provided
+- Include Womens if it is womenswear
+- No filler
+- No repeated words
+- No symbols spam
+- No short titles
+
+GOOD:
+Papaya Pink Lace Sleeve Blouse Top Long Sleeve Stretch Womens Size 16
+
+BAD:
+Papaya Size 16 Pink Lace Sleeve Top
 - eBay description should be keyword-rich but still natural.
 - Do not use hashtags for eBay.
 - Include clear bullet points.
