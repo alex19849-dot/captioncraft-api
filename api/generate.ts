@@ -160,7 +160,26 @@ LISTING QUALITY RULES:
 Create a Vinted listing using exactly this structure:
 
 VINTED TITLE:
-Brand Item Colour Size
+Write exactly ONE Vinted title using this formula:
+
+Brand + Item Type + Colour + Key Feature + Size
+
+RULES:
+- Include Brand if provided
+- Include Item Type
+- Include Colour if provided
+- Include useful feature words if relevant, such as lace, floral, midi, maxi, oversized, fitted, stretch, long sleeve, short sleeve, sleeveless, button, zip
+- Include Size if provided
+- Keep it natural and clean
+- No repeated words
+- No filler words
+- Make it look like a strong real Vinted listing title
+
+GOOD:
+Papaya Lace Sleeve Top Pink Womens Size 16
+
+BAD:
+Papaya Top Pink 16
 
 DESCRIPTION:
 Write a polished, professional resale description using the seller details. Make it detailed enough to help a buyer decide, but keep it factual and natural.
